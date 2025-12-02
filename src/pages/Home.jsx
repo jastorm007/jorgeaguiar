@@ -1,4 +1,4 @@
 export default function Home() {
-    return <h1>Welcome to aguiar.org</h1>;
+    return <h1>Welcome to AGUIAR.ORG</h1>;
   }
   

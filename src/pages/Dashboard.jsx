@@ -1,134 +1,111 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const API_BASE = "https://sorpentor.com";
+const API = "https://sorpentor.com";
 
-export default function Analytics() {
+export default function Dashboard() {
   const { token } = useAuth();
 
-  const [range, setRange] = useState("last7");
-  const [data, setData] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [error, setError] = useState("");
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("visited_at");
+  const [sortDir, setSortDir] = useState("desc");
 
-  const fetchData = async () => {
-    if (!token) {
-      setError("Not authenticated");
-      return;
-    }
+  const pageSize = 25;
 
-    try {
-      const res = await fetch(`${API_BASE}/analytics/visits/range`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          range,
-          startDate,
-          endDate
-        })
-      });
+  const fetchTable = async () => {
+    const res = await fetch(`${API}/analytics/visits/table`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        page,
+        pageSize,
+        sortBy,
+        sortDir,
+        search
+      })
+    });
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-
-      const json = await res.json();
-      setData(json);
-      setError("");
-    } catch (err) {
-      console.error("Analytics fetch failed:", err);
-      setError("Failed to load analytics data");
-      setData([]);
-    }
+    const json = await res.json();
+    setRows(json.rows);
+    setTotal(json.total);
   };
 
   useEffect(() => {
-    fetchData();
-  }, [range, token]); // 👈 token matters
+    fetchTable();
+  }, [page, sortBy, sortDir]);
+
+  const toggleSort = (col) => {
+    if (sortBy === col) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(col);
+      setSortDir("asc");
+    }
+  };
 
   return (
     <div className="container mt-4">
-      <h1>📊 Analytics Dashboard</h1>
+      <h2>🔍 Page Visits</h2>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      <input
+        className="form-control mb-3"
+        placeholder="Search..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && fetchTable()}
+      />
 
-      {/* 🔽 RANGE SELECTOR */}
-      <div className="row mt-3 align-items-end">
-        <div className="col-md-3">
-          <label className="form-label">Date Range</label>
-          <select
-            className="form-select"
-            value={range}
-            onChange={(e) => setRange(e.target.value)}
-          >
-            <option value="yesterday">Yesterday</option>
-            <option value="last7">Last 7 Days</option>
-            <option value="last30">Last 30 Days</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
-
-        {range === "custom" && (
-          <>
-            <div className="col-md-3">
-              <label className="form-label">Start Date</label>
-              <input
-                type="date"
-                className="form-control"
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-
-            <div className="col-md-3">
-              <label className="form-label">End Date</label>
-              <input
-                type="date"
-                className="form-control"
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-
-            <div className="col-md-3">
-              <button
-                className="btn btn-primary w-100"
-                onClick={fetchData}
-              >
-                Apply
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* 📋 RESULTS */}
-      <table className="table table-striped mt-4">
+      <table className="table table-hover table-sm">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Visits</th>
+            <th onClick={() => toggleSort("visited_at")}>Date</th>
+            <th onClick={() => toggleSort("website")}>Website</th>
+            <th onClick={() => toggleSort("page")}>Page</th>
+            <th onClick={() => toggleSort("country")}>Country</th>
+            <th>IP</th>
           </tr>
         </thead>
         <tbody>
-          {data.length === 0 && (
-            <tr>
-              <td colSpan="2" className="text-center text-muted">
-                No data available
-              </td>
-            </tr>
-          )}
-
-          {data.map((row, i) => (
-            <tr key={i}>
-              <td>{row.day}</td>
-              <td>{row.total}</td>
+          {rows.map((r) => (
+            <tr key={r.id}>
+              <td>{new Date(r.visited_at).toLocaleString()}</td>
+              <td>{r.website}</td>
+              <td>{r.page}</td>
+              <td>{r.country}</td>
+              <td>{r.ip_address}</td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* 📄 Pagination */}
+      <div className="d-flex justify-content-between">
+        <button
+          className="btn btn-outline-secondary"
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Prev
+        </button>
+
+        <span>
+          Page {page} of {Math.ceil(total / pageSize)}
+        </span>
+
+        <button
+          className="btn btn-outline-secondary"
+          disabled={page * pageSize >= total}
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

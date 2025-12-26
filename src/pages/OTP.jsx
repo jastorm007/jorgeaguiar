@@ -28,7 +28,8 @@ export default function OTP() {
   }
 
   return (
-    <div className="container vh-100 d-flex justify-content-center align-items-center">
+    <div className="page center">
+      <div className="content">
       <div className="card shadow p-4" style={{ maxWidth: 400, width: "100%" }}>
         <h4 className="text-center mb-3">Enter OTP</h4>
 
@@ -47,6 +48,7 @@ export default function OTP() {
             Verify
           </button>
         </form>
+      </div>
       </div>
     </div>
   );

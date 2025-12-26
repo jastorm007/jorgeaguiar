@@ -50,8 +50,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container mt-4">
-      <h2>🔍 Page Visits</h2>
+    <div className="page">
+      <div className="content">
+      <h2>🔍 Page Visits Dashboard</h2>
 
       <input
         className="form-control mb-3"
@@ -105,6 +106,7 @@ export default function Dashboard() {
         >
           Next
         </button>
+      </div>
       </div>
     </div>
   );

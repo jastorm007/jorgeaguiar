@@ -1,24 +1,44 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
 
 export default function Navbar() {
   const { token, logout } = useAuth();
+  const [open, setOpen] = useState(false);
 
   return (
-    <nav style={{ padding: 10, background: "#eee", marginBottom: 20 }}>
-      <Link to="/home">Home</Link> |{" "}
-      <Link to="/dashboard">Dashboard</Link> |{" "}
-      <Link to="/videos">Videos</Link> |{" "}
-      <Link to="/account">Account</Link>
+    <nav className="nav">
+      <div className="nav-inner">
 
-      {token && (
+        {/* Brand */}
+        <div className="nav-brand">
+          <Link to="/home">aguiar.org</Link>
+        </div>
+
+        {/* Hamburger (mobile) */}
         <button
-          onClick={logout}
-          style={{ marginLeft: 20 }}
+          className="nav-toggle"
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle menu"
         >
-          Logout
+          ☰
         </button>
-      )}
+
+        {/* Links */}
+        <div className={`nav-links ${open ? "open" : ""}`}>
+          <Link to="/home" onClick={() => setOpen(false)}>Home</Link>
+          <Link to="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
+          <Link to="/videos" onClick={() => setOpen(false)}>Videos</Link>
+          <Link to="/account" onClick={() => setOpen(false)}>Account</Link>
+
+          {token && (
+            <button className="logout" onClick={logout}>
+              Logout
+            </button>
+          )}
+        </div>
+
+      </div>
     </nav>
   );
 }

@@ -24,7 +24,8 @@ export default function Landing() {
   }
 
   return (
-    <div className="container vh-100 d-flex justify-content-center align-items-center">
+    <div className="page center">
+      <div className="content">
       <div className="card shadow p-4" style={{ maxWidth: 420, width: "100%" }}>
         <h3 className="text-center mb-4">aguiar.org</h3>
 
@@ -68,6 +69,7 @@ export default function Landing() {
             Continue
           </button>
         </form>
+      </div>
       </div>
     </div>
   );

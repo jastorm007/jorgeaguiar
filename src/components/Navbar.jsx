@@ -7,6 +7,7 @@ export default function Navbar() {
   return (
     <nav style={{ padding: 10, background: "#eee", marginBottom: 20 }}>
       <Link to="/home">Home</Link> |{" "}
+      <Link to="/dashboard">Dashboard</Link> |{" "}
       <Link to="/videos">Videos</Link> |{" "}
       <Link to="/account">Account</Link>
 

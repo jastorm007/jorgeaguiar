@@ -6,47 +6,69 @@ export default function Landing() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
   async function handleLogin(e) {
     e.preventDefault();
+    setError("");
 
     const res = await requestOTP(email, password, phone);
 
     if (res?.success) {
       navigate("/otp", { state: { email, phone } });
     } else {
-      alert(res?.message || "Error requesting OTP");
+      setError(res?.message || "Failed to request OTP");
     }
   }
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>aguiar.org Login</h1>
+    <div className="container vh-100 d-flex justify-content-center align-items-center">
+      <div className="card shadow p-4" style={{ maxWidth: 420, width: "100%" }}>
+        <h3 className="text-center mb-4">aguiar.org</h3>
 
-      <form onSubmit={handleLogin}>
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        {error && <div className="alert alert-danger">{error}</div>}
 
-        <input
-          placeholder="Phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+        <form onSubmit={handleLogin}>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              className="form-control"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <div className="mb-3">
+            <label className="form-label">Phone</label>
+            <input
+              type="tel"
+              className="form-control"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </div>
 
-        <button>Request OTP</button>
-      </form>
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-control"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <button className="btn btn-primary w-100">
+            Continue
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

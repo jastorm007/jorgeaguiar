@@ -9,5 +9,25 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+        <!-- Analytics API -->
+        <script>
+          window.addEventListener('load', () => {
+            const website = window.location.hostname.replace(/^www\./, '');
+            const page = window.location.pathname || '/';
+        
+            fetch('https://sorpentor.com/analytics/visit', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                website,
+                page
+              })
+            }).catch(err => {
+              console.error('Analytics error:', err);
+            });
+          });
+        </script>
   </body>
 </html>

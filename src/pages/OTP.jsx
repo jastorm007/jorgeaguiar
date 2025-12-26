@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 
 export default function OTP() {
   const [otp, setOtp] = useState("");
+  const [error, setError] = useState("");
+
   const location = useLocation();
   const navigate = useNavigate();
   const { loginWithToken } = useAuth();
@@ -13,27 +15,39 @@ export default function OTP() {
 
   async function handleVerify(e) {
     e.preventDefault();
+    setError("");
+
     const res = await verifyOTP(email, phone, otp);
 
     if (res?.token) {
       loginWithToken(res.token);
       navigate("/home");
     } else {
-      alert(res?.message || "Invalid OTP");
+      setError(res?.message || "Invalid OTP");
     }
   }
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Enter OTP</h1>
-      <form onSubmit={handleVerify}>
-        <input
-          placeholder="OTP"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-        />
-        <button>Verify</button>
-      </form>
+    <div className="container vh-100 d-flex justify-content-center align-items-center">
+      <div className="card shadow p-4" style={{ maxWidth: 400, width: "100%" }}>
+        <h4 className="text-center mb-3">Enter OTP</h4>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <form onSubmit={handleVerify}>
+          <input
+            className="form-control mb-3"
+            placeholder="One-time password"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            required
+          />
+
+          <button className="btn btn-success w-100">
+            Verify
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -1,37 +1,60 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+
+const API_BASE = "https://sorpentor.com";
 
 export default function Analytics() {
+  const { token } = useAuth();
+
   const [range, setRange] = useState("last7");
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [error, setError] = useState("");
 
-  const token = localStorage.getItem("token");
+  const fetchData = async () => {
+    if (!token) {
+      setError("Not authenticated");
+      return;
+    }
 
-  const fetchData = () => {
-    fetch("/analytics/visits/range", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        range,
-        startDate,
-        endDate
-      })
-    })
-      .then(res => res.json())
-      .then(setData);
+    try {
+      const res = await fetch(`${API_BASE}/analytics/visits/range`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          range,
+          startDate,
+          endDate
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const json = await res.json();
+      setData(json);
+      setError("");
+    } catch (err) {
+      console.error("Analytics fetch failed:", err);
+      setError("Failed to load analytics data");
+      setData([]);
+    }
   };
 
   useEffect(() => {
     fetchData();
-  }, [range]);
+  }, [range, token]); // 👈 token matters
 
   return (
     <div className="container mt-4">
       <h1>📊 Analytics Dashboard</h1>
+
+      {error && <div className="alert alert-danger">{error}</div>}
 
       {/* 🔽 RANGE SELECTOR */}
       <div className="row mt-3 align-items-end">
@@ -40,7 +63,7 @@ export default function Analytics() {
           <select
             className="form-select"
             value={range}
-            onChange={e => setRange(e.target.value)}
+            onChange={(e) => setRange(e.target.value)}
           >
             <option value="yesterday">Yesterday</option>
             <option value="last7">Last 7 Days</option>
@@ -56,7 +79,7 @@ export default function Analytics() {
               <input
                 type="date"
                 className="form-control"
-                onChange={e => setStartDate(e.target.value)}
+                onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
 
@@ -65,7 +88,7 @@ export default function Analytics() {
               <input
                 type="date"
                 className="form-control"
-                onChange={e => setEndDate(e.target.value)}
+                onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
 
@@ -90,6 +113,14 @@ export default function Analytics() {
           </tr>
         </thead>
         <tbody>
+          {data.length === 0 && (
+            <tr>
+              <td colSpan="2" className="text-center text-muted">
+                No data available
+              </td>
+            </tr>
+          )}
+
           {data.map((row, i) => (
             <tr key={i}>
               <td>{row.day}</td>

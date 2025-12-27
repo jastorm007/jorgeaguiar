@@ -179,3 +179,57 @@ a {
 .fade-in {
   animation: fadeIn 0.2s ease-out;
 }
+
+/* =========================
+   VIDEOS PAGE
+========================= */
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.video-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.video-card video {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  background: #000;
+}
+
+.video-card h3 {
+  font-size: 1rem;
+  margin: 0.25rem 0;
+}
+
+.video-card p {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 0.75rem;
+}
+
+.video-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.video-actions button {
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.video-actions button:hover {
+  background: #eee;
+}
+

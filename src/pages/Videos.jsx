@@ -9,19 +9,20 @@ export default function Videos() {
   useEffect(() => {
     if (!token) return;
 
-    // 1️⃣ Load video metadata
-    fetch(`${API_BASE}/media/videos`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(res => {
+    async function loadVideos() {
+      try {
+        // 1️⃣ Get video metadata
+        const res = await fetch(`${API_BASE}/media/videos`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
         if (!res.ok) throw new Error("Failed to load videos");
-        return res.json();
-      })
-      .then(async (data) => {
-        // 2️⃣ For each video, request an authorized stream URL
-        const withUrls = await Promise.all(
+        const data = await res.json();
+
+        // 2️⃣ Get signed URLs
+        const withSignedUrls = await Promise.all(
           data.map(async (v) => {
             const r = await fetch(
               `${API_BASE}/media/videos/authorize/${v.id}`,
@@ -31,14 +32,21 @@ export default function Videos() {
                 }
               }
             );
-            const j = await r.json();
-            return { ...v, streamUrl: j.url };
+
+            if (!r.ok) throw new Error("Failed to authorize video");
+            const { url } = await r.json();
+
+            return { ...v, streamUrl: url };
           })
         );
 
-        setVideos(withUrls);
-      })
-      .catch(err => console.error("Video load error:", err));
+        setVideos(withSignedUrls);
+      } catch (err) {
+        console.error("Video load error:", err);
+      }
+    }
+
+    loadVideos();
   }, [token]);
 
   function react(id, liked) {
@@ -49,7 +57,7 @@ export default function Videos() {
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({ liked })
-    }).catch(err => console.error("Reaction error:", err));
+    }).catch(console.error);
   }
 
   return (

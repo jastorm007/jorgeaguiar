@@ -28,7 +28,7 @@ export default function Navbar() {
         <div className={`nav-links ${open ? "open" : ""}`}>
           <Link to="/home" onClick={() => setOpen(false)}>Home</Link>
           <Link to="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
-          <Link to="/videos" onClick={() => setOpen(false)}>Videos</Link>
+          <Link to="/media" onClick={() => setOpen(false)}>Media</Link>
           <Link to="/account" onClick={() => setOpen(false)}>Account</Link>
 
           {token && (

@@ -28,9 +28,9 @@ export default function OTP() {
   }
 
   return (
-    <div className="page center">
+    <div className="page center login">
       <div className="content">
-      <div className="card shadow p-4" style={{ maxWidth: 400, width: "100%" }}>
+      <div className="card shadow p-4">
         <h4 className="text-center mb-3">Enter OTP</h4>
 
         {error && <div className="alert alert-danger">{error}</div>}

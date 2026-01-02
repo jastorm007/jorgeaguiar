@@ -24,9 +24,9 @@ export default function Landing() {
   }
 
   return (
-    <div className="page center">
+    <div className="page center login">
       <div className="content">
-      <div className="card shadow p-4" style={{ maxWidth: 420, width: "100%" }}>
+      <div className="card shadow p-4">
         <h3 className="text-center mb-4">aguiar.org</h3>
 
         {error && <div className="alert alert-danger">{error}</div>}

@@ -6,7 +6,7 @@ import Landing from "./pages/Landing";
 import OTP from "./pages/OTP";
 import Home from "./pages/Home";
 import Account from "./pages/Account";
-import Videos from "./pages/Videos";
+import Media from "./pages/Media";
 import Dashboard from "./pages/Dashboard";
 
 function ProtectedRoute({ children }) {
@@ -19,6 +19,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Navbar />
+
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/otp" element={<OTP />} />
@@ -41,11 +42,12 @@ export default function App() {
             }
           />
 
+          {/* ✅ FIXED */}
           <Route
-            path="/videos"
+            path="/media"
             element={
               <ProtectedRoute>
-                <Videos />
+                <Media />
               </ProtectedRoute>
             }
           />
@@ -58,7 +60,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          
         </Routes>
       </BrowserRouter>
     </AuthProvider>

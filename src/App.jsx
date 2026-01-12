@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Account from "./pages/Account";
 import Media from "./pages/Media";
 import Dashboard from "./pages/Dashboard";
+import AviationDashboard from "./pages/AviationDashboard";
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -57,6 +58,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/aviation"
+            element={
+              <ProtectedRoute>
+                <AviationDashboard />
               </ProtectedRoute>
             }
           />

@@ -9,6 +9,7 @@ import Account from "./pages/Account";
 import Media from "./pages/Media";
 import Dashboard from "./pages/Dashboard";
 import AviationDashboard from "./pages/AviationDashboard";
+import AviationEventReport from "./pages/AviationEventReport";
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -70,6 +71,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/aviation/event/:id"
+            element={
+              <ProtectedRoute>
+                <AviationEventReport />
+              </ProtectedRoute>
+            }
+          />
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>

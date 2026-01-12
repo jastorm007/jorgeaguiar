@@ -54,6 +54,21 @@ export default function AviationDashboard() {
     window.open(`/aviation/event/${id}`, "_blank", "noopener,noreferrer");
   } 
 
+  async function clearSearch() {
+    setSearchQuery("");
+    setSearchColumn("LOC_STATE_NAME");
+    setPage(1);
+    setChartMode("none");
+  
+    const res = await fetch(`${API_BASE}/aviation-events?limit=250`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  
+    setEvents(await res.json());
+  }  
+
   /* ===============================
      INITIAL LOAD
   =============================== */
@@ -133,7 +148,10 @@ export default function AviationDashboard() {
           </div>
 
           <form onSubmit={runSearch} style={{ display: "flex", gap: 10, marginTop: 10 }}>
-            <select value={searchColumn} onChange={e => setSearchColumn(e.target.value)}>
+            <select
+              value={searchColumn}
+              onChange={e => setSearchColumn(e.target.value)}
+            >
               {SEARCH_COLUMNS.map(col => (
                 <option key={col} value={col}>{col}</option>
               ))}
@@ -147,7 +165,22 @@ export default function AviationDashboard() {
             />
 
             <button type="submit">Search</button>
+
+            {/* ✅ CLEAR BUTTON */}
+            <button
+              type="button"
+              onClick={clearSearch}
+              style={{
+                background: "#eee",
+                border: "1px solid #ccc",
+                padding: "6px 12px",
+                cursor: "pointer"
+              }}
+            >
+              Clear
+            </button>
           </form>
+
         </section>
 
         {/* CHARTS */}
@@ -510,6 +543,7 @@ function LineChart({ events, column }) {
 function PieChart({ events, column }) {
   const data = groupCounts(events, column);
   const total = data.reduce((a, b) => a + b[1], 0) || 1;
+
   let start = 0;
 
   return (
@@ -517,18 +551,45 @@ function PieChart({ events, column }) {
       <svg width="220" height="220" viewBox="0 0 220 220">
         {data.map(([label, val], i) => {
           const angle = (val / total) * 360;
-          const path = describeArc(110, 110, 90, start, start + angle);
-          start += angle;
+          const end = start + angle;
+          const path = describeArc(110, 110, 90, start, end);
+
+          // label position (middle of slice)
+          const midAngle = start + angle / 2;
+          const rad = ((midAngle - 90) * Math.PI) / 180;
+          const lx = 110 + 55 * Math.cos(rad);
+          const ly = 110 + 55 * Math.sin(rad);
+
+          const percent = Math.round((val / total) * 100);
+
+          start = end;
 
           return (
-            <path
-              key={label}
-              d={path}
-              fill={`hsl(${i * 40},70%,60%)`}
-            />
+            <g key={label}>
+              <path
+                d={path}
+                fill={`hsl(${i * 40},70%,60%)`}
+              />
+
+              {/* Percentage label (hide if too small) */}
+              {percent >= 5 && (
+                <text
+                  x={lx}
+                  y={ly}
+                  fontSize="11"
+                  fill="#fff"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{ pointerEvents: "none", fontWeight: "bold" }}
+                >
+                  {percent}%
+                </text>
+              )}
+            </g>
           );
         })}
       </svg>
+
       <ChartLegend data={data} />
     </>
   );

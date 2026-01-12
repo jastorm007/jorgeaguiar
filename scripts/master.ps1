@@ -26,10 +26,9 @@ try {
     Run-Git checkout master
     Run-Git merge development
     Run-Git push github master
-    Run-Git npm run build
+    npm run build
     
     Run-Git checkout development
-
 
     Write-Host "`n✅ Deploy merge workflow completed successfully!" -ForegroundColor Green
 }

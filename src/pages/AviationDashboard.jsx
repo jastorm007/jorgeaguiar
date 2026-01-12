@@ -26,6 +26,12 @@ const SEARCH_COLUMNS = [
   "RMK_TEXT"
 ];
 
+const CHART_HEIGHT = 260;
+const CHART_WIDTH = 900;
+const PADDING_LEFT = 50;
+const PADDING_BOTTOM = 40;
+const PADDING_TOP = 20;
+
 export default function AviationDashboard() {
   const token = localStorage.getItem("aguiar_token");
 
@@ -46,8 +52,7 @@ export default function AviationDashboard() {
 
   function openEventReport(id) {
     window.open(`/aviation/event/${id}`, "_blank", "noopener,noreferrer");
-  }
-  
+  } 
 
   /* ===============================
      INITIAL LOAD
@@ -295,42 +300,208 @@ function BarChart({ events, column }) {
   const data = groupCounts(events, column);
   const max = Math.max(...data.map(d => d[1]), 1);
 
+  const barWidth = 40;
+  const gap = 30;
+  const chartHeight = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+
   return (
     <>
-      <svg width="100%" height="220">
-        {data.map(([label, val], i) => (
-          <rect
-            key={label}
-            x={i * 60}
-            y={200 - (val / max) * 180}
-            width={40}
-            height={(val / max) * 180}
-            fill={`hsl(${i * 40},70%,60%)`}
-          />
-        ))}
+      <svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+        {/* Y AXIS */}
+        <line
+          x1={PADDING_LEFT}
+          y1={PADDING_TOP}
+          x2={PADDING_LEFT}
+          y2={CHART_HEIGHT - PADDING_BOTTOM}
+          stroke="#333"
+        />
+
+        {/* Y AXIS TICKS */}
+        {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+          const y = PADDING_TOP + chartHeight * (1 - t);
+          return (
+            <g key={i}>
+              <line
+                x1={PADDING_LEFT - 5}
+                y1={y}
+                x2={PADDING_LEFT}
+                y2={y}
+                stroke="#333"
+              />
+              <text
+                x={PADDING_LEFT - 8}
+                y={y + 4}
+                fontSize="10"
+                textAnchor="end"
+              >
+                {Math.round(max * t)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* X AXIS */}
+        <line
+          x1={PADDING_LEFT}
+          y1={CHART_HEIGHT - PADDING_BOTTOM}
+          x2={CHART_WIDTH}
+          y2={CHART_HEIGHT - PADDING_BOTTOM}
+          stroke="#333"
+        />
+
+        {/* BARS */}
+        {data.map(([label, val], i) => {
+          const x = PADDING_LEFT + i * (barWidth + gap) + gap;
+          const height = (val / max) * chartHeight;
+          const y = CHART_HEIGHT - PADDING_BOTTOM - height;
+
+          return (
+            <g key={label}>
+              <rect
+                x={x}
+                y={y}
+                width={barWidth}
+                height={height}
+                fill={`hsl(${i * 40},70%,60%)`}
+              />
+
+              {/* VALUE LABEL */}
+              <text
+                x={x + barWidth / 2}
+                y={y - 4}
+                textAnchor="middle"
+                fontSize="11"
+              >
+                {val}
+              </text>
+
+              {/* X LABEL */}
+              <text
+                x={x + barWidth / 2}
+                y={CHART_HEIGHT - PADDING_BOTTOM + 14}
+                textAnchor="middle"
+                fontSize="10"
+                transform={`rotate(-30 ${x + barWidth / 2},${CHART_HEIGHT - PADDING_BOTTOM + 14})`}
+              >
+                {label}
+              </text>
+            </g>
+          );
+        })}
       </svg>
+
       <ChartLegend data={data} />
     </>
   );
 }
 
+
 function LineChart({ events, column }) {
   const data = groupCounts(events, column);
   const max = Math.max(...data.map(d => d[1]), 1);
 
+  const chartHeight = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+  const chartWidth = CHART_WIDTH - PADDING_LEFT - 40;
+  const stepX = chartWidth / Math.max(data.length - 1, 1);
+
   return (
     <>
-      <svg width="100%" height="220">
-        {data.map(([label, val], i) => (
-          <circle
-            key={label}
-            cx={i * 80 + 40}
-            cy={200 - (val / max) * 180}
-            r="5"
-            fill={`hsl(${i * 40},70%,60%)`}
-          />
-        ))}
+      <svg
+        width="100%"
+        height={CHART_HEIGHT}
+        viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+      >
+        {/* Y AXIS */}
+        <line
+          x1={PADDING_LEFT}
+          y1={PADDING_TOP}
+          x2={PADDING_LEFT}
+          y2={CHART_HEIGHT - PADDING_BOTTOM}
+          stroke="#333"
+        />
+
+        {/* Y AXIS TICKS + VALUES */}
+        {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+          const y = PADDING_TOP + chartHeight * (1 - t);
+          return (
+            <g key={i}>
+              <line
+                x1={PADDING_LEFT - 6}
+                y1={y}
+                x2={PADDING_LEFT}
+                y2={y}
+                stroke="#333"
+              />
+              <text
+                x={PADDING_LEFT - 10}
+                y={y + 4}
+                fontSize="10"
+                textAnchor="end"
+              >
+                {Math.round(max * t)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* X AXIS */}
+        <line
+          x1={PADDING_LEFT}
+          y1={CHART_HEIGHT - PADDING_BOTTOM}
+          x2={CHART_WIDTH}
+          y2={CHART_HEIGHT - PADDING_BOTTOM}
+          stroke="#333"
+        />
+
+        {/* LINE */}
+        <polyline
+          fill="none"
+          stroke="#2c7be5"
+          strokeWidth="2"
+          points={data
+            .map(([_, val], i) => {
+              const x = PADDING_LEFT + i * stepX;
+              const y = PADDING_TOP + chartHeight * (1 - val / max);
+              return `${x},${y}`;
+            })
+            .join(" ")}
+        />
+
+        {/* POINTS + VALUE LABELS + X LABELS */}
+        {data.map(([label, val], i) => {
+          const x = PADDING_LEFT + i * stepX;
+          const y = PADDING_TOP + chartHeight * (1 - val / max);
+
+          return (
+            <g key={label}>
+              {/* POINT */}
+              <circle cx={x} cy={y} r="4" fill="#2c7be5" />
+
+              {/* VALUE */}
+              <text
+                x={x}
+                y={y - 6}
+                fontSize="11"
+                textAnchor="middle"
+              >
+                {val}
+              </text>
+
+              {/* X LABEL */}
+              <text
+                x={x}
+                y={CHART_HEIGHT - PADDING_BOTTOM + 16}
+                fontSize="10"
+                textAnchor="middle"
+                transform={`rotate(-30 ${x},${CHART_HEIGHT - PADDING_BOTTOM + 16})`}
+              >
+                {label}
+              </text>
+            </g>
+          );
+        })}
       </svg>
+
       <ChartLegend data={data} />
     </>
   );

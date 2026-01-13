@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
+
 const API_BASE = "https://sorpentor.com";
 
 export default function AviationEventReport() {

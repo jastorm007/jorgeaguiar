@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
+const navigate = useNavigate();
 const API_BASE = "https://sorpentor.com";
 
 /* ===============================
@@ -50,9 +52,10 @@ export default function AviationDashboard() {
   const [chartMode, setChartMode] = useState("none"); // none | bar | line | pie
   const [chartColumn, setChartColumn] = useState("LOC_STATE_NAME");
 
+  // Opens Record Selected
   function openEventReport(id) {
-    window.open(`/aviation/event/${id}`, "_blank", "noopener,noreferrer");
-  } 
+    navigate(`/aviation/event/${id}`);
+  }
 
   async function clearSearch() {
     setSearchQuery("");

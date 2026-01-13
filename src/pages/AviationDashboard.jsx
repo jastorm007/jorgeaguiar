@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const navigate = useNavigate();
 const API_BASE = "https://sorpentor.com";
 
 /* ===============================
@@ -35,6 +34,7 @@ const PADDING_BOTTOM = 40;
 const PADDING_TOP = 20;
 
 export default function AviationDashboard() {
+  const navigate = useNavigate();
   const token = localStorage.getItem("aguiar_token");
 
   const [stats, setStats] = useState(null);

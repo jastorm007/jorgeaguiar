@@ -214,9 +214,10 @@ export default function AviationDashboard() {
                   <Th>Date</Th>
                   <Th>Time</Th>
                   <Th>State</Th>
-                  <Th>Aircraft</Th>
-                  <Th>Phase</Th>
+                  <Th>City</Th>
+                  <Th>Aircraft</Th>                  
                   <Th>Fatal</Th>
+                  <Th>Remarks</Th>
                 </tr>
               </thead>
               <tbody>
@@ -225,11 +226,12 @@ export default function AviationDashboard() {
                     <Td>{formatDate(e.EVENT_LCL_DATE)}</Td>
                     <Td>{e.EVENT_LCL_TIME || "—"}</Td>
                     <Td>{e.LOC_STATE_NAME}</Td>
-                    <Td>{e.ACFT_MAKE_NAME} {e.ACFT_MODEL_NAME}</Td>
-                    <Td>{e.FLT_PHASE}</Td>
+                    <Td>{e.LOC_CITY_NAME}</Td>
+                    <Td>{e.ACFT_MAKE_NAME} {e.ACFT_MODEL_NAME}</Td>                    
                     <Td style={{ color: e.FATAL_FLAG === "Yes" ? "red" : "#555" }}>
                       {e.FATAL_FLAG}
                     </Td>
+                    <Td>{e.RMK_TEXT}</Td>
                   </tr>
                 ))}
               </tbody>

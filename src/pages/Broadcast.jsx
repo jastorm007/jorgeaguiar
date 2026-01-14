@@ -87,6 +87,7 @@ export default function Broadcast() {
             controls={false}
             controlsList="nodownload nofullscreen noremoteplayback"
             disablePictureInPicture
+            onContextMenu={e => e.preventDefault()}
             onEnded={loadNext}
           />
 

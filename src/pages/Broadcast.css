@@ -32,6 +32,8 @@
   height: 100%;
   object-fit: cover; /* 🔥 THIS prevents overshoot */
   background: black;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Sound button */

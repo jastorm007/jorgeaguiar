@@ -4,13 +4,23 @@ const API_BASE = "https://sorpentor.com";
 const WEBSITE = "jorgeaguiar.com";
 
 /* ===============================
-   CHART CONSTANTS (MATCH AVIATION)
+   CHART CONSTANTS
 =============================== */
 const CHART_HEIGHT = 260;
 const CHART_WIDTH = 900;
 const PADDING_LEFT = 60;
-const PADDING_BOTTOM = 40;
+const PADDING_BOTTOM = 50;
 const PADDING_TOP = 20;
+
+/* ===============================
+   SORTABLE COLUMNS (BACKEND SAFE)
+=============================== */
+const SORTABLE_COLUMNS = [
+  "visited_at",
+  "page",
+  "country",
+  "ip_address"
+];
 
 export default function Visitors() {
   const token = localStorage.getItem("aguiar_token");
@@ -21,6 +31,10 @@ export default function Visitors() {
   /* ===== PAGINATION ===== */
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+
+  /* ===== SORT ===== */
+  const [sortBy, setSortBy] = useState("visited_at");
+  const [sortDir, setSortDir] = useState("desc");
 
   /* ===== FILTERS ===== */
   const [search, setSearch] = useState("");
@@ -33,7 +47,7 @@ export default function Visitors() {
 
   useEffect(() => {
     loadVisits();
-  }, [page, pageSize, search, startDate, endDate]);
+  }, [page, pageSize, sortBy, sortDir, search, startDate, endDate]);
 
   async function loadVisits() {
     if (!token) return;
@@ -48,6 +62,8 @@ export default function Visitors() {
         website: WEBSITE,
         page,
         pageSize,
+        sortBy,
+        sortDir,
         search,
         startDate,
         endDate
@@ -57,6 +73,16 @@ export default function Visitors() {
     const data = await res.json();
     setRows(data.rows || []);
     setTotal(data.total || 0);
+  }
+
+  function toggleSort(col) {
+    if (!SORTABLE_COLUMNS.includes(col)) return;
+    if (sortBy === col) {
+      setSortDir(d => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(col);
+      setSortDir("asc");
+    }
   }
 
   /* ===============================
@@ -111,11 +137,7 @@ export default function Visitors() {
         </div>
 
         {chartMode !== "line" && (
-          <select
-            value={chartColumn}
-            onChange={e => setChartColumn(e.target.value)}
-            style={{ marginTop: 10 }}
-          >
+          <select value={chartColumn} onChange={e => setChartColumn(e.target.value)}>
             <option value="page">Page</option>
             <option value="country">Country</option>
           </select>
@@ -132,10 +154,10 @@ export default function Visitors() {
           <table className="analytics-table">
             <thead>
               <tr>
-                <th>Visited At</th>
-                <th>Page</th>
-                <th>Country</th>
-                <th>IP Address</th>
+                <SortableTh label="Visited At" column="visited_at" {...{ sortBy, sortDir, toggleSort }} />
+                <SortableTh label="Page" column="page" {...{ sortBy, sortDir, toggleSort }} />
+                <SortableTh label="Country" column="country" {...{ sortBy, sortDir, toggleSort }} />
+                <SortableTh label="IP Address" column="ip_address" {...{ sortBy, sortDir, toggleSort }} />
               </tr>
             </thead>
             <tbody>
@@ -163,6 +185,18 @@ export default function Visitors() {
 }
 
 /* ===============================
+   SORTABLE HEADER
+=============================== */
+function SortableTh({ label, column, sortBy, sortDir, toggleSort }) {
+  const active = sortBy === column;
+  return (
+    <th onClick={() => toggleSort(column)} style={{ cursor: "pointer" }}>
+      {label} {active && (sortDir === "asc" ? "▲" : "▼")}
+    </th>
+  );
+}
+
+/* ===============================
    CHART UTILITIES
 =============================== */
 
@@ -175,30 +209,6 @@ function groupCounts(rows, column) {
   return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10);
 }
 
-function ChartLegend({ data }) {
-  return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-      gap: 8,
-      marginTop: 12,
-      fontSize: 12
-    }}>
-      {data.map(([label, value], i) => (
-        <div key={label} style={{ display: "flex", gap: 6 }}>
-          <span style={{
-            width: 12,
-            height: 12,
-            background: `hsl(${i * 40},70%,60%)`,
-            display: "inline-block"
-          }} />
-          <span>{label} ({value})</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ===============================
    BAR CHART
 =============================== */
@@ -206,40 +216,36 @@ function BarChart({ rows, column }) {
   const data = groupCounts(rows, column);
   const max = Math.max(...data.map(d => d[1]), 1);
   const chartHeight = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
-  const barWidth = 40;
-  const gap = 30;
 
   return (
-    <>
-      <svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
-        <line x1={PADDING_LEFT} y1={PADDING_TOP}
-              x2={PADDING_LEFT} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
-        <line x1={PADDING_LEFT} y1={CHART_HEIGHT - PADDING_BOTTOM}
-              x2={CHART_WIDTH} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
+    <svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+      <line x1={PADDING_LEFT} y1={PADDING_TOP}
+            x2={PADDING_LEFT} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
+      <line x1={PADDING_LEFT} y1={CHART_HEIGHT - PADDING_BOTTOM}
+            x2={CHART_WIDTH} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
 
-        {data.map(([label, val], i) => {
-          const x = PADDING_LEFT + gap + i * (barWidth + gap);
-          const h = (val / max) * chartHeight;
-          const y = CHART_HEIGHT - PADDING_BOTTOM - h;
+      {data.map(([label, val], i) => {
+        const x = PADDING_LEFT + 40 + i * 70;
+        const h = (val / max) * chartHeight;
+        const y = CHART_HEIGHT - PADDING_BOTTOM - h;
+        return (
+          <g key={label}>
+            <rect x={x} y={y} width={40} height={h} fill={`hsl(${i * 40},70%,60%)`} />
+            <text x={x + 20} y={y - 6} textAnchor="middle" fontSize="11">{val}</text>
+          </g>
+        );
+      })}
 
-          return (
-            <g key={label}>
-              <rect x={x} y={y} width={barWidth} height={h}
-                fill={`hsl(${i * 40},70%,60%)`} />
-              <text x={x + barWidth / 2} y={y - 6}
-                textAnchor="middle" fontSize="11">{val}</text>
-            </g>
-          );
-        })}
-      </svg>
-
-      <ChartLegend data={data} />
-    </>
+      <text x="20" y="30" transform="rotate(-90 20,30)" fontSize="12">Visits</text>
+      <text x={CHART_WIDTH / 2} y={CHART_HEIGHT - 10} textAnchor="middle" fontSize="12">
+        {column}
+      </text>
+    </svg>
   );
 }
 
 /* ===============================
-   LINE CHART
+   LINE CHART (WITH AXIS LABELS)
 =============================== */
 function LineChart({ rows }) {
   const map = {};
@@ -254,33 +260,34 @@ function LineChart({ rows }) {
   const stepX = (CHART_WIDTH - PADDING_LEFT - 40) / Math.max(data.length - 1, 1);
 
   return (
-    <>
-      <svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
-        <line x1={PADDING_LEFT} y1={PADDING_TOP}
-              x2={PADDING_LEFT} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
-        <line x1={PADDING_LEFT} y1={CHART_HEIGHT - PADDING_BOTTOM}
-              x2={CHART_WIDTH} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
+    <svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+      <line x1={PADDING_LEFT} y1={PADDING_TOP}
+            x2={PADDING_LEFT} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
+      <line x1={PADDING_LEFT} y1={CHART_HEIGHT - PADDING_BOTTOM}
+            x2={CHART_WIDTH} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
 
-        <polyline
-          fill="none"
-          stroke="#2c7be5"
-          strokeWidth="2"
-          points={data.map(([_, val], i) => {
-            const x = PADDING_LEFT + i * stepX;
-            const y = PADDING_TOP + chartHeight * (1 - val / max);
-            return `${x},${y}`;
-          }).join(" ")}
-        />
-
-        {data.map(([label, val], i) => {
+      <polyline
+        fill="none"
+        stroke="#2c7be5"
+        strokeWidth="2"
+        points={data.map(([_, val], i) => {
           const x = PADDING_LEFT + i * stepX;
           const y = PADDING_TOP + chartHeight * (1 - val / max);
-          return <circle key={label} cx={x} cy={y} r="4" fill="#2c7be5" />;
-        })}
-      </svg>
+          return `${x},${y}`;
+        }).join(" ")}
+      />
 
-      <ChartLegend data={data} />
-    </>
+      {data.map(([label, val], i) => {
+        const x = PADDING_LEFT + i * stepX;
+        const y = PADDING_TOP + chartHeight * (1 - val / max);
+        return <circle key={label} cx={x} cy={y} r="4" fill="#2c7be5" />;
+      })}
+
+      <text x="20" y="30" transform="rotate(-90 20,30)" fontSize="12">Visits</text>
+      <text x={CHART_WIDTH / 2} y={CHART_HEIGHT - 10} textAnchor="middle" fontSize="12">
+        Date
+      </text>
+    </svg>
   );
 }
 
@@ -303,39 +310,33 @@ function PieChart({ rows, column }) {
           start = end;
 
           return (
-            <path key={label}
-              d={path}
-              fill={`hsl(${i * 40},70%,60%)`}>
+            <path key={label} d={path} fill={`hsl(${i * 40},70%,60%)`}>
               <title>{label}: {percent}%</title>
             </path>
           );
         })}
       </svg>
-
-      <ChartLegend
-        data={data.map(([label, val]) => [
-          label,
-          `${((val / total) * 100).toFixed(1)}%`
-        ])}
-      />
+      <ChartLegend data={data.map(([l, v]) => [l, `${((v / total) * 100).toFixed(1)}%`])} />
     </>
   );
 }
 
-function describeArc(x, y, r, start, end) {
-  const rad = a => ((a - 90) * Math.PI) / 180;
-  const sx = x + r * Math.cos(rad(end));
-  const sy = y + r * Math.sin(rad(end));
-  const ex = x + r * Math.cos(rad(start));
-  const ey = y + r * Math.sin(rad(start));
-  const large = end - start > 180 ? 1 : 0;
-  return `M ${x} ${y} L ${ex} ${ey} A ${r} ${r} 0 ${large} 1 ${sx} ${sy} Z`;
+function ChartLegend({ data }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px,1fr))", gap: 8, fontSize: 12 }}>
+      {data.map(([label, value], i) => (
+        <div key={label} style={{ display: "flex", gap: 6 }}>
+          <span style={{ width: 12, height: 12, background: `hsl(${i * 40},70%,60%)` }} />
+          <span>{label} ({value})</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /* ===============================
    UI HELPERS
 =============================== */
-
 function KPI({ label, value }) {
   return (
     <div className="kpi-card">
@@ -347,11 +348,18 @@ function KPI({ label, value }) {
 
 function ChartIcon({ icon, active, onClick }) {
   return (
-    <span
-      onClick={onClick}
-      style={{ fontSize: 22, cursor: "pointer", opacity: active ? 1 : 0.4 }}
-    >
+    <span onClick={onClick} style={{ fontSize: 22, cursor: "pointer", opacity: active ? 1 : 0.4 }}>
       {icon}
     </span>
   );
+}
+
+function describeArc(x, y, r, start, end) {
+  const rad = a => ((a - 90) * Math.PI) / 180;
+  const sx = x + r * Math.cos(rad(end));
+  const sy = y + r * Math.sin(rad(end));
+  const ex = x + r * Math.cos(rad(start));
+  const ey = y + r * Math.sin(rad(start));
+  const large = end - start > 180 ? 1 : 0;
+  return `M ${x} ${y} L ${ex} ${ey} A ${r} ${r} 0 ${large} 1 ${sx} ${sy} Z`;
 }

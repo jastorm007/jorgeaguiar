@@ -1,21 +1,27 @@
 const API_LOGIN = "https://sorpentor.com/login/otp";
 const API_VERIFY = "https://sorpentor.com/login/verify-otp";
 
-export async function requestOTP(email, password, phone) {
+/**
+ * Step 1: Request OTP
+ */
+export async function requestOTP(email, password) {
   const res = await fetch(API_LOGIN, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, phone }),
+    body: JSON.stringify({ email, password }),
   });
 
   return res.json();
 }
 
-export async function verifyOTP(email, phone, otp) {
+/**
+ * Step 2: Verify OTP
+ */
+export async function verifyOTP(email, otp) {
   const res = await fetch(API_VERIFY, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, phone, otp }),
+    body: JSON.stringify({ email, otp }),
   });
 
   return res.json();

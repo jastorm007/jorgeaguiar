@@ -11,13 +11,18 @@ export default function OTP() {
   const navigate = useNavigate();
   const { loginWithToken } = useAuth();
 
-  const { email, phone } = location.state || {};
+  const { email } = location.state || {};
 
   async function handleVerify(e) {
     e.preventDefault();
     setError("");
 
-    const res = await verifyOTP(email, phone, otp);
+    if (!email) {
+      setError("Missing login context. Please sign in again.");
+      return;
+    }
+
+    const res = await verifyOTP(email, otp);
 
     if (res?.token) {
       loginWithToken(res.token);
@@ -30,25 +35,25 @@ export default function OTP() {
   return (
     <div className="page center login">
       <div className="content">
-      <div className="card shadow p-4">
-        <h4 className="text-center mb-3">Enter OTP</h4>
+        <div className="card shadow p-4">
+          <h4 className="text-center mb-3">Enter OTP</h4>
 
-        {error && <div className="alert alert-danger">{error}</div>}
+          {error && <div className="alert alert-danger">{error}</div>}
 
-        <form onSubmit={handleVerify}>
-          <input
-            className="form-control mb-3"
-            placeholder="One-time password"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            required
-          />
+          <form onSubmit={handleVerify}>
+            <input
+              className="form-control mb-3"
+              placeholder="One-time password"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
+            />
 
-          <button className="btn btn-success w-100">
-            Verify
-          </button>
-        </form>
-      </div>
+            <button className="btn btn-success w-100">
+              Verify
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

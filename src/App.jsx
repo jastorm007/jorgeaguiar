@@ -10,6 +10,7 @@ import Media from "./pages/Media";
 import Dashboard from "./pages/Dashboard";
 import AviationDashboard from "./pages/AviationDashboard";
 import AviationEventReport from "./pages/AviationEventReport";
+import Register from "./pages/Register";
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -78,6 +79,12 @@ export default function App() {
               <ProtectedRoute>
                 <AviationEventReport />
               </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/register"
+            element={<Register />
             }
           />
 

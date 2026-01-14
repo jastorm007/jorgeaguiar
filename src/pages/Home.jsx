@@ -12,24 +12,62 @@ export default function Home() {
 
         <p style={{ marginTop: "20px", lineHeight: 1.6 }}>
           This website serves as a working space where I design, test, and
-          demonstrate various portals, tools, and application concepts. You’ll
-          find examples of media systems, dashboards, APIs, and interactive
-          components that reflect real-world use cases.
+          demonstrate real application systems rather than static demos. The
+          pages here reflect how modern web applications are structured, how
+          data flows between services, and how frontends consume secure APIs.
         </p>
 
         <p style={{ marginTop: "16px", lineHeight: 1.6 }}>
-          Many of the pages here are intentionally functional rather than
-          polished marketing pages — the focus is on how things work, how they
-          scale, and how they can be adapted to different needs.
+          The frontend is built using a component based architecture with modern
+          JavaScript frameworks, client side routing, and state driven rendering.
+          Pages are designed to react to live data returned from backend
+          services, providing interactive tables, charts, and media playback
+          without full page reloads.
         </p>
 
         <p style={{ marginTop: "16px", lineHeight: 1.6 }}>
-          Feel free to explore, click around, and see what’s being built. This
-          site is constantly evolving as new ideas, demos, and systems are added.
+          Behind the scenes, the backend consists of API driven services that
+          handle authentication, data retrieval, analytics, and media metadata.
+          These services expose controlled endpoints that the frontend consumes
+          using secure tokens, allowing different pages to share common
+          infrastructure while remaining logically separated.
+        </p>
+
+        <p style={{ marginTop: "22px", lineHeight: 1.6 }}>
+          <strong>Media Page:</strong> The media section demonstrates a structured
+          media delivery system. Metadata is retrieved from an API and rendered
+          dynamically, while actual media access is controlled by the backend.
+          This approach allows streaming, engagement tracking, and permission
+          handling without exposing raw storage paths or internal systems.
+        </p>
+
+        <p style={{ marginTop: "16px", lineHeight: 1.6 }}>
+          <strong>Broadcast Page:</strong> The broadcast area focuses on real time
+          or near real time content delivery. It highlights how frontend
+          components can respond to backend signals, status updates, or timed
+          events, simulating live systems such as monitoring dashboards,
+          streaming controls, or operational displays.
+        </p>
+
+        <p style={{ marginTop: "16px", lineHeight: 1.6 }}>
+          <strong>Aviation Dashboard:</strong> The aviation dashboard showcases
+          data intensive workflows. Large datasets are queried, filtered, and
+          paginated server side, then visualized client side using charts, tables,
+          and interactive controls. This page emphasizes performance, clarity,
+          and the ability to explore complex datasets without overwhelming the
+          user or the browser.
+        </p>
+
+        <p style={{ marginTop: "16px", lineHeight: 1.6 }}>
+          Many areas of this site are intentionally practical rather than styled
+          as marketing pages. The goal is to demonstrate how systems are built,
+          how they scale, and how they can be adapted for production use in
+          different industries.
         </p>
 
         <p style={{ marginTop: "28px", fontWeight: 500 }}>
-          I appreciate your time and curiosity — enjoy your visit.
+          I appreciate your time and curiosity — enjoy exploring what’s being
+          built.
         </p>
       </div>
     </div>

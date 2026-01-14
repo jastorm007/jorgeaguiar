@@ -62,6 +62,7 @@ body {
   background: none;
   border: none;
   cursor: pointer;
+  color: #ffffff;
 }
 
 /* Desktop nav links (DEFAULT STATE) */
@@ -73,12 +74,8 @@ body {
 
 .nav-links a {
   text-decoration: none;
-  color: #222;
+  color: black;
   font-weight: 500;
-}
-
-.nav-links a:hover {
-  text-decoration: underline;
 }
 
 .logout {
@@ -102,14 +99,34 @@ body {
     position: absolute;
     top: 100%;
     right: 1rem;
-    background: black;
+    background: #111;
     flex-direction: column;
     width: 220px;
     padding: 1rem;
     gap: 1rem;
-    border: 1px solid #ddd;
+    border: 1px solid #333;
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     z-index: 1000;
+  }
+
+  .nav-links a {
+    color: #ffffff;
+    font-weight: 500;
+  }
+
+  .nav-links a:hover {
+    text-decoration: underline;
+  }
+
+  /* Logout button inside mobile menu */
+  .nav-links .logout {
+    background: #222;
+    color: #ffffff;
+    border: 1px solid #444;
+  }
+
+  .nav-links .logout:hover {
+    background: #333;
   }
 
   .nav-links.open {

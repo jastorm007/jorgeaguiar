@@ -33,6 +33,19 @@ export default function Home() {
           infrastructure while remaining logically separated.
         </p>
 
+        <p style={{ marginTop: "16px", lineHeight: 1.6 }}>
+        <strong>Visitors Page:</strong> The visitors page demonstrates a secure
+        analytics pipeline built around authenticated API services and a responsive
+        frontend. Page activity is collected and stored centrally, then queried through
+        protected endpoints that apply server-side filtering, sorting, and pagination
+        to ensure accuracy and performance. The frontend consumes this data using
+        state-driven components, presenting key metrics, searchable tables, and
+        interactive visualizations that update in real time as filters change. This
+        approach highlights how operational analytics can be delivered efficiently
+        while maintaining data integrity, scalability, and clear separation between
+        backend services and client-side presentation.
+      </p>
+
         <p style={{ marginTop: "22px", lineHeight: 1.6 }}>
           <strong>Media Page:</strong> The media section demonstrates a structured
           media delivery system. Metadata is retrieved from an API and rendered

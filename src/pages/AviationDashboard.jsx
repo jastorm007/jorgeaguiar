@@ -45,12 +45,14 @@ export default function AviationDashboard() {
   /* ===== SEARCH ===== */
   const [searchColumn, setSearchColumn] = useState("LOC_STATE_NAME");
   const [searchQuery, setSearchQuery] = useState("");
+
+  /* ===== PAGINATION ===== */
   const [page, setPage] = useState(1);
-  const limit = 25;
+  const [limit, setLimit] = useState(25);
 
   /* ===== SORT ===== */
   const [sortColumn, setSortColumn] = useState("EVENT_LCL_DATE");
-  const [sortDirection, setSortDirection] = useState("desc"); // asc | desc
+  const [sortDirection, setSortDirection] = useState("desc");
 
   /* ===== CHARTS ===== */
   const [chartMode, setChartMode] = useState("none");
@@ -69,19 +71,6 @@ export default function AviationDashboard() {
     }
   }
 
-  async function clearSearch() {
-    setSearchQuery("");
-    setSearchColumn("LOC_STATE_NAME");
-    setPage(1);
-    setChartMode("none");
-
-    const res = await fetch(`${API_BASE}/aviation-events?limit=250`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    setEvents(await res.json());
-  }
-
   /* ===============================
      INITIAL LOAD
   =============================== */
@@ -94,7 +83,7 @@ export default function AviationDashboard() {
       const [statsRes, timelineRes, eventsRes] = await Promise.all([
         fetch(`${API_BASE}/aviation/stats`, { headers }),
         fetch(`${API_BASE}/aviation/stats/timeline`, { headers }),
-        fetch(`${API_BASE}/aviation-events?limit=250`, { headers })
+        fetch(`${API_BASE}/aviation-events?limit=500`, { headers })
       ]);
 
       setStats(await statsRes.json());
@@ -121,42 +110,59 @@ export default function AviationDashboard() {
       },
       body: JSON.stringify({
         column: searchColumn,
-        query: searchQuery,
-        page,
-        limit
+        query: searchQuery
       })
+    });
+
+    setEvents(await res.json());
+    setPage(1);
+  }
+
+  async function clearSearch() {
+    setSearchQuery("");
+    setSearchColumn("LOC_STATE_NAME");
+    setPage(1);
+    setChartMode("none");
+
+    const res = await fetch(`${API_BASE}/aviation-events?limit=500`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
     setEvents(await res.json());
   }
 
   /* ===============================
-     SORTED EVENTS (DERIVED)
+     SORTED EVENTS
   =============================== */
   const sortedEvents = useMemo(() => {
-    if (!sortColumn) return events;
-
     return [...events].sort((a, b) => {
       let av = a[sortColumn] ?? "";
       let bv = b[sortColumn] ?? "";
 
-      // Date handling
       if (sortColumn.includes("DATE")) {
         av = new Date(av);
         bv = new Date(bv);
       }
 
-      // Numeric handling
       if (!isNaN(av) && !isNaN(bv)) {
         return sortDirection === "asc" ? av - bv : bv - av;
       }
 
-      // String handling
       return sortDirection === "asc"
         ? String(av).localeCompare(String(bv))
         : String(bv).localeCompare(String(av));
     });
   }, [events, sortColumn, sortDirection]);
+
+  /* ===============================
+     PAGINATED EVENTS
+  =============================== */
+  const totalPages = Math.ceil(sortedEvents.length / limit);
+
+  const pagedEvents = useMemo(() => {
+    const start = (page - 1) * limit;
+    return sortedEvents.slice(start, start + limit);
+  }, [sortedEvents, page, limit]);
 
   if (!token) return <p>Please log in.</p>;
   if (loading) return <p>Loading aviation data…</p>;
@@ -198,21 +204,51 @@ export default function AviationDashboard() {
         <section style={{ marginTop: 30 }}>
           <h3>Results</h3>
 
+          {/* PAGE CONTROLS */}
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+            <div>
+              Rows per page:&nbsp;
+              <select
+                value={limit}
+                onChange={e => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+              >
+                {[10, 25, 50, 100].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+                ◀ Prev
+              </button>
+              <span style={{ margin: "0 10px" }}>
+                Page {page} of {totalPages}
+              </span>
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+                Next ▶
+              </button>
+            </div>
+          </div>
+
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  <SortableTh label="Date" column="EVENT_LCL_DATE" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-                  <SortableTh label="Time" column="EVENT_LCL_TIME" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-                  <SortableTh label="State" column="LOC_STATE_NAME" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-                  <SortableTh label="City" column="LOC_CITY_NAME" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-                  <SortableTh label="Aircraft" column="ACFT_MAKE_NAME" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-                  <SortableTh label="Fatal" column="FATAL_FLAG" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                  <SortableTh label="Date" column="EVENT_LCL_DATE" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                  <SortableTh label="Time" column="EVENT_LCL_TIME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                  <SortableTh label="State" column="LOC_STATE_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                  <SortableTh label="City" column="LOC_CITY_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                  <SortableTh label="Aircraft" column="ACFT_MAKE_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                  <SortableTh label="Fatal" column="FATAL_FLAG" {...{ sortColumn, sortDirection, onSort: handleSort }} />
                   <Th>Remarks</Th>
                 </tr>
               </thead>
               <tbody>
-                {sortedEvents.map(e => (
+                {pagedEvents.map(e => (
                   <tr key={e.id} onClick={() => openEventReport(e.id)} style={{ cursor: "pointer" }}>
                     <Td>{formatDate(e.EVENT_LCL_DATE)}</Td>
                     <Td>{e.EVENT_LCL_TIME || "—"}</Td>
@@ -243,12 +279,7 @@ function SortableTh({ label, column, sortColumn, sortDirection, onSort }) {
   return (
     <th
       onClick={() => onSort(column)}
-      style={{
-        padding: 8,
-        borderBottom: "1px solid #ddd",
-        cursor: "pointer",
-        userSelect: "none"
-      }}
+      style={{ padding: 8, borderBottom: "1px solid #ddd", cursor: "pointer" }}
     >
       {label} {active && (sortDirection === "asc" ? "▲" : "▼")}
     </th>

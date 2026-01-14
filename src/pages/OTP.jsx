@@ -26,7 +26,7 @@ export default function OTP() {
 
     if (res?.token) {
       loginWithToken(res.token);
-      navigate("/home");
+      navigate("/media");
     } else {
       setError(res?.message || "Invalid OTP");
     }

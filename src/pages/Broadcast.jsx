@@ -80,8 +80,8 @@ export default function Broadcast() {
             autoPlay
             playsInline
             controls={false}
-            disablePictureInPicture
-            controlsList="nodownload"
+            controlsList="nodownload nofullscreen noremoteplayback"
+            disablePictureInPicture                  
             onEnded={loadNext}
           />
 

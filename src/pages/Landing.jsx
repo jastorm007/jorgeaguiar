@@ -26,7 +26,7 @@ export default function Landing() {
     <div className="page center login">
       <div className="content">
         <div className="card shadow p-4">
-          <h3 className="text-center mb-4">aguiar.org</h3>
+          <h3 className="text-center mb-4">JORGE AGUIAR</h3>
 
           {error && <div className="alert alert-danger">{error}</div>}
 

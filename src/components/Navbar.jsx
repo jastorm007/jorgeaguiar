@@ -19,7 +19,7 @@ export default function Navbar() {
 
         {/* Brand */}
         <div className="nav-brand">
-          <Link to={token ? "/home" : "/"}>aguiar.org</Link>
+          <Link to={token ? "/media" : "/"}>JORGE AGUIAR</Link>
         </div>
 
         {/* Hamburger */}
@@ -44,13 +44,8 @@ export default function Navbar() {
           {/* 🔒 PROTECTED */}
           {token && (
             <>
-              <Link to="/home" onClick={() => setOpen(false)}>Home</Link>
-              <Link to="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
-              <Link to="/media" onClick={() => setOpen(false)}>Media</Link>
-              <Link to="/aviation" onClick={() => setOpen(false)}>Aviation</Link>
+              <Link to="/media" onClick={() => setOpen(false)}>Media</Link>            
               <Link to="/broadcast" onClick={() => setOpen(false)}>Broadcast</Link>
-              <Link to="/account" onClick={() => setOpen(false)}>Account</Link>
-
               <button className="logout" onClick={handleLogout}>
                 Logout
               </button>

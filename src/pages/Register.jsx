@@ -9,7 +9,7 @@ export default function Register() {
     const form = new FormData(e.target);
     const payload = Object.fromEntries(form.entries());
 
-    const res = await fetch("/register", {
+    const res = await fetch("https://sorpentor.com/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

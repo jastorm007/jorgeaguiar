@@ -25,37 +25,40 @@ export default function Broadcast() {
     setVideo(data);
   }
 
+  /* 🔥 LOAD FIRST VIDEO */
   useEffect(() => {
     loadNext();
   }, []);
 
+  /* 🔊 Handle mode changes ONLY */
   useEffect(() => {
     if (!videoRef.current) return;
 
     const v = videoRef.current;
-    v.load();
-    v.play().catch(() => {});
+    const isFullscreen =
+      mode === "fullscreen-sound" || mode === "fullscreen-muted";
 
-    if (mode === "tv-muted") {
-      v.muted = true;
-      document.fullscreenElement && document.exitFullscreen();
-    }
+    /* Sound rules */
+    v.muted = mode === "tv-muted" || mode === "fullscreen-muted";
 
-    if (mode === "fullscreen-sound") {
-      v.muted = false;
-      containerRef.current?.requestFullscreen?.();
+    /* Fullscreen rules */
+    if (isFullscreen) {
+      if (!document.fullscreenElement) {
+        containerRef.current?.requestFullscreen?.().catch(() => {});
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
     }
-
-    if (mode === "tv-sound") {
-      v.muted = false;
-      document.fullscreenElement && document.exitFullscreen();
-    }
-  }, [video, mode]);
+  }, [mode]);
 
   function toggleSoundMode() {
     setMode((prev) => {
       if (prev === "tv-muted") return "fullscreen-sound";
-      if (prev === "fullscreen-sound") return "tv-sound";
+      if (prev === "fullscreen-sound") return "fullscreen-muted";
+      if (prev === "fullscreen-muted") return "tv-sound";
+      if (prev === "tv-sound") return "tv-muted";
       return "tv-muted";
     });
   }
@@ -70,7 +73,7 @@ export default function Broadcast() {
         <div
           ref={containerRef}
           className={`broadcast-tv ${
-            mode === "fullscreen-sound" ? "fullscreen" : ""
+            mode.startsWith("fullscreen") ? "fullscreen" : ""
           }`}
         >
           <video
@@ -78,10 +81,12 @@ export default function Broadcast() {
             className="broadcast-video"
             src={video.url}
             autoPlay
+            muted
             playsInline
+            preload="auto"
             controls={false}
             controlsList="nodownload nofullscreen noremoteplayback"
-            disablePictureInPicture                  
+            disablePictureInPicture
             onEnded={loadNext}
           />
 
@@ -91,6 +96,7 @@ export default function Broadcast() {
           >
             {mode === "tv-muted" && "🔇"}
             {mode === "fullscreen-sound" && "🔊"}
+            {mode === "fullscreen-muted" && "🔇"}
             {mode === "tv-sound" && "🔈"}
           </button>
         </div>

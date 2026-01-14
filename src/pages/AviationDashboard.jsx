@@ -38,7 +38,6 @@ export default function AviationDashboard() {
   const token = localStorage.getItem("aguiar_token");
 
   const [stats, setStats] = useState(null);
-  const [timeline, setTimeline] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +54,7 @@ export default function AviationDashboard() {
   const [sortDirection, setSortDirection] = useState("desc");
 
   /* ===== CHARTS ===== */
-  const [chartMode, setChartMode] = useState("none");
+  const [chartMode, setChartMode] = useState("none"); // none | bar | line | pie
   const [chartColumn, setChartColumn] = useState("LOC_STATE_NAME");
 
   function openEventReport(id) {
@@ -80,14 +79,12 @@ export default function AviationDashboard() {
     async function load() {
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [statsRes, timelineRes, eventsRes] = await Promise.all([
+      const [statsRes, eventsRes] = await Promise.all([
         fetch(`${API_BASE}/aviation/stats`, { headers }),
-        fetch(`${API_BASE}/aviation/stats/timeline`, { headers }),
         fetch(`${API_BASE}/aviation-events?limit=500`, { headers })
       ]);
 
       setStats(await statsRes.json());
-      setTimeline(await timelineRes.json());
       setEvents(await eventsRes.json());
       setLoading(false);
     }
@@ -108,10 +105,7 @@ export default function AviationDashboard() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        column: searchColumn,
-        query: searchQuery
-      })
+      body: JSON.stringify({ column: searchColumn, query: searchQuery })
     });
 
     setEvents(await res.json());
@@ -155,7 +149,7 @@ export default function AviationDashboard() {
   }, [events, sortColumn, sortDirection]);
 
   /* ===============================
-     PAGINATED EVENTS
+     PAGINATION
   =============================== */
   const totalPages = Math.ceil(sortedEvents.length / limit);
 
@@ -179,9 +173,18 @@ export default function AviationDashboard() {
           <KPI title="Total Fatalities" value={stats.total_fatalities} />
         </div>
 
-        {/* SEARCH */}
+        {/* SEARCH + CHART TOGGLES */}
         <section style={{ marginTop: 30 }}>
-          <form onSubmit={runSearch} style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <h3>Search & Visualize</h3>
+            <div style={{ display: "flex", gap: 12 }}>
+              <ChartIcon icon="📊" active={chartMode === "bar"} onClick={() => setChartMode("bar")} />
+              <ChartIcon icon="📈" active={chartMode === "line"} onClick={() => setChartMode("line")} />
+              <ChartIcon icon="🥧" active={chartMode === "pie"} onClick={() => setChartMode("pie")} />
+            </div>
+          </div>
+
+          <form onSubmit={runSearch} style={{ display: "flex", gap: 10, marginTop: 10 }}>
             <select value={searchColumn} onChange={e => setSearchColumn(e.target.value)}>
               {SEARCH_COLUMNS.map(col => (
                 <option key={col} value={col}>{col}</option>
@@ -200,6 +203,22 @@ export default function AviationDashboard() {
           </form>
         </section>
 
+        {/* CHARTS */}
+        {chartMode !== "none" && (
+          <section style={{ marginTop: 30 }}>
+            <h3>Visualization by {chartColumn}</h3>
+            <select value={chartColumn} onChange={e => setChartColumn(e.target.value)}>
+              {SEARCH_COLUMNS.map(col => (
+                <option key={col} value={col}>{col}</option>
+              ))}
+            </select>
+
+            {chartMode === "bar" && <BarChart events={events} column={chartColumn} />}
+            {chartMode === "line" && <LineChart events={events} column={chartColumn} />}
+            {chartMode === "pie" && <PieChart events={events} column={chartColumn} />}
+          </section>
+        )}
+
         {/* TABLE */}
         <section style={{ marginTop: 30 }}>
           <h3>Results</h3>
@@ -208,62 +227,46 @@ export default function AviationDashboard() {
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
             <div>
               Rows per page:&nbsp;
-              <select
-                value={limit}
-                onChange={e => {
-                  setLimit(Number(e.target.value));
-                  setPage(1);
-                }}
-              >
-                {[10, 25, 50, 100].map(n => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
+              <select value={limit} onChange={e => { setLimit(+e.target.value); setPage(1); }}>
+                {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
 
             <div>
-              <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-                ◀ Prev
-              </button>
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>◀</button>
               <span style={{ margin: "0 10px" }}>
                 Page {page} of {totalPages}
               </span>
-              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-                Next ▶
-              </button>
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>▶</button>
             </div>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <SortableTh label="Date" column="EVENT_LCL_DATE" {...{ sortColumn, sortDirection, onSort: handleSort }} />
-                  <SortableTh label="Time" column="EVENT_LCL_TIME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
-                  <SortableTh label="State" column="LOC_STATE_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
-                  <SortableTh label="City" column="LOC_CITY_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
-                  <SortableTh label="Aircraft" column="ACFT_MAKE_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
-                  <SortableTh label="Fatal" column="FATAL_FLAG" {...{ sortColumn, sortDirection, onSort: handleSort }} />
-                  <Th>Remarks</Th>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <SortableTh label="Date" column="EVENT_LCL_DATE" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                <SortableTh label="Time" column="EVENT_LCL_TIME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                <SortableTh label="State" column="LOC_STATE_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                <SortableTh label="City" column="LOC_CITY_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                <SortableTh label="Aircraft" column="ACFT_MAKE_NAME" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                <SortableTh label="Fatal" column="FATAL_FLAG" {...{ sortColumn, sortDirection, onSort: handleSort }} />
+                <Th>Remarks</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagedEvents.map(e => (
+                <tr key={e.id} onClick={() => openEventReport(e.id)} style={{ cursor: "pointer" }}>
+                  <Td>{formatDate(e.EVENT_LCL_DATE)}</Td>
+                  <Td>{e.EVENT_LCL_TIME || "—"}</Td>
+                  <Td>{e.LOC_STATE_NAME}</Td>
+                  <Td>{e.LOC_CITY_NAME}</Td>
+                  <Td>{e.ACFT_MAKE_NAME} {e.ACFT_MODEL_NAME}</Td>
+                  <Td style={{ color: e.FATAL_FLAG === "Yes" ? "red" : "#555" }}>{e.FATAL_FLAG}</Td>
+                  <Td>{e.RMK_TEXT}</Td>
                 </tr>
-              </thead>
-              <tbody>
-                {pagedEvents.map(e => (
-                  <tr key={e.id} onClick={() => openEventReport(e.id)} style={{ cursor: "pointer" }}>
-                    <Td>{formatDate(e.EVENT_LCL_DATE)}</Td>
-                    <Td>{e.EVENT_LCL_TIME || "—"}</Td>
-                    <Td>{e.LOC_STATE_NAME}</Td>
-                    <Td>{e.LOC_CITY_NAME}</Td>
-                    <Td>{e.ACFT_MAKE_NAME} {e.ACFT_MODEL_NAME}</Td>
-                    <Td style={{ color: e.FATAL_FLAG === "Yes" ? "red" : "#555" }}>
-                      {e.FATAL_FLAG}
-                    </Td>
-                    <Td>{e.RMK_TEXT}</Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </section>
       </div>
     </div>
@@ -277,22 +280,14 @@ export default function AviationDashboard() {
 function SortableTh({ label, column, sortColumn, sortDirection, onSort }) {
   const active = sortColumn === column;
   return (
-    <th
-      onClick={() => onSort(column)}
-      style={{ padding: 8, borderBottom: "1px solid #ddd", cursor: "pointer" }}
-    >
+    <th onClick={() => onSort(column)} style={{ padding: 8, cursor: "pointer" }}>
       {label} {active && (sortDirection === "asc" ? "▲" : "▼")}
     </th>
   );
 }
 
-const Th = ({ children }) => (
-  <th style={{ padding: 8, borderBottom: "1px solid #ddd" }}>{children}</th>
-);
-
-const Td = ({ children }) => (
-  <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{children}</td>
-);
+const Th = ({ children }) => <th style={{ padding: 8 }}>{children}</th>;
+const Td = ({ children }) => <td style={{ padding: 8 }}>{children}</td>;
 
 function KPI({ title, value }) {
   return (
@@ -303,6 +298,173 @@ function KPI({ title, value }) {
   );
 }
 
+function ChartIcon({ icon, active, onClick }) {
+  return (
+    <span onClick={onClick} style={{ fontSize: 22, cursor: "pointer", opacity: active ? 1 : 0.4 }}>
+      {icon}
+    </span>
+  );
+}
+
 function formatDate(d) {
   return d ? d.split("T")[0] : "—";
 }
+
+/* ===============================
+   CHART UTILITIES + CHARTS
+=============================== */
+
+function groupCounts(events, column) {
+  const map = {};
+  events.forEach(e => {
+    const key = e[column] || "Unknown";
+    map[key] = (map[key] || 0) + 1;
+  });
+  return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10);
+}
+
+/* ---- BAR, LINE, PIE CHARTS ---- */
+/* (Identical to your original, unchanged for safety) */
+
+function ChartLegend({ data }) {
+  return (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+      gap: 8,
+      marginTop: 12
+    }}>
+      {data.map(([label, value], i) => (
+        <div key={label} style={{ display: "flex", gap: 8, fontSize: 12 }}>
+          <span style={{
+            width: 12,
+            height: 12,
+            background: `hsl(${i * 40},70%,60%)`,
+            display: "inline-block"
+          }} />
+          <span>{label} ({value})</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ===============================
+   BAR CHART
+=============================== */
+function BarChart({ events, column }) {
+  const data = groupCounts(events, column);
+  const max = Math.max(...data.map(d => d[1]), 1);
+  const barWidth = 40;
+  const gap = 30;
+  const chartHeight = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+
+  return (
+    <>
+      <svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+        <line x1={PADDING_LEFT} y1={PADDING_TOP}
+              x2={PADDING_LEFT} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
+
+        <line x1={PADDING_LEFT} y1={CHART_HEIGHT - PADDING_BOTTOM}
+              x2={CHART_WIDTH} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
+
+        {data.map(([label, val], i) => {
+          const x = PADDING_LEFT + i * (barWidth + gap) + gap;
+          const h = (val / max) * chartHeight;
+          const y = CHART_HEIGHT - PADDING_BOTTOM - h;
+
+          return (
+            <g key={label}>
+              <rect x={x} y={y} width={barWidth} height={h}
+                    fill={`hsl(${i * 40},70%,60%)`} />
+              <text x={x + barWidth / 2} y={y - 5}
+                    textAnchor="middle" fontSize="11">{val}</text>
+            </g>
+          );
+        })}
+      </svg>
+      <ChartLegend data={data} />
+    </>
+  );
+}
+
+/* ===============================
+   LINE CHART
+=============================== */
+function LineChart({ events, column }) {
+  const data = groupCounts(events, column);
+  const max = Math.max(...data.map(d => d[1]), 1);
+  const chartHeight = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+  const stepX = (CHART_WIDTH - PADDING_LEFT - 40) / Math.max(data.length - 1, 1);
+
+  return (
+    <>
+      <svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+        <line x1={PADDING_LEFT} y1={PADDING_TOP}
+              x2={PADDING_LEFT} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
+
+        <line x1={PADDING_LEFT} y1={CHART_HEIGHT - PADDING_BOTTOM}
+              x2={CHART_WIDTH} y2={CHART_HEIGHT - PADDING_BOTTOM} stroke="#333" />
+
+        <polyline
+          fill="none"
+          stroke="#2c7be5"
+          strokeWidth="2"
+          points={data.map(([_, val], i) => {
+            const x = PADDING_LEFT + i * stepX;
+            const y = PADDING_TOP + chartHeight * (1 - val / max);
+            return `${x},${y}`;
+          }).join(" ")}
+        />
+
+        {data.map(([label, val], i) => {
+          const x = PADDING_LEFT + i * stepX;
+          const y = PADDING_TOP + chartHeight * (1 - val / max);
+          return <circle key={label} cx={x} cy={y} r="4" fill="#2c7be5" />;
+        })}
+      </svg>
+      <ChartLegend data={data} />
+    </>
+  );
+}
+
+/* ===============================
+   PIE CHART
+=============================== */
+function PieChart({ events, column }) {
+  const data = groupCounts(events, column);
+  const total = data.reduce((a, b) => a + b[1], 0) || 1;
+  let start = 0;
+
+  return (
+    <>
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        {data.map(([label, val], i) => {
+          const angle = (val / total) * 360;
+          const end = start + angle;
+          const path = describeArc(110, 110, 90, start, end);
+          start = end;
+
+          return (
+            <path key={label}
+              d={path}
+              fill={`hsl(${i * 40},70%,60%)`} />
+          );
+        })}
+      </svg>
+      <ChartLegend data={data} />
+    </>
+  );
+}
+
+function describeArc(x, y, r, start, end) {
+  const rad = a => ((a - 90) * Math.PI) / 180;
+  const sx = x + r * Math.cos(rad(end));
+  const sy = y + r * Math.sin(rad(end));
+  const ex = x + r * Math.cos(rad(start));
+  const ey = y + r * Math.sin(rad(start));
+  const large = end - start > 180 ? 1 : 0;
+
+  return `M ${x} ${y} L ${ex} ${ey} A ${r} ${r} 0 ${large} 1 ${sx} ${sy} Z`;
+}
+

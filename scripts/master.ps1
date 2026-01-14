@@ -20,15 +20,16 @@ function Run-Git {
 
 try {
     Write-Host "`n🚀 Starting deploy merge workflow`n" -ForegroundColor Green
+    Run-Git checkout development
+    Run-Git merge feature/register    
+    Run-Git push origin development
 
-    Run-Git push github development
-
-    Run-Git checkout master
+    Run-Git checkout main
     Run-Git merge development
-    Run-Git push github master
+    Run-Git push origin main
     npm run build
     
-    Run-Git checkout development
+    Run-Git checkout feature/register
 
     Write-Host "`n✅ Deploy merge workflow completed successfully!" -ForegroundColor Green
 }

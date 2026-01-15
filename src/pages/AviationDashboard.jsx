@@ -241,7 +241,7 @@ export default function AviationDashboard() {
             </div>
           </div>
 
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="analytics-table">
             <thead>
               <tr>
                 <SortableTh label="Date" column="EVENT_LCL_DATE" {...{ sortColumn, sortDirection, onSort: handleSort }} />

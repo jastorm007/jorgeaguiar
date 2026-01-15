@@ -90,8 +90,19 @@ body {
    MOBILE NAV ONLY
 ========================= */
 @media (max-width: 768px) {
+  .nav {
+    background: #111;
+    border-bottom: 1px solid #222;
+  }
+
+  .nav-brand a {
+    color: #ffffff;
+    border-right-color: #333;
+  }  
+  
   .nav-toggle {
     display: block;
+    color: #ffffff;
   }
 
   .nav-links {
@@ -132,6 +143,14 @@ body {
   .nav-links.open {
     display: flex;                 /* 🔥 show dropdown */
   }
+
+  .page {
+    padding: 1rem;
+  }
+
+  .content {
+    max-width: 100%;
+  }
 }
 
 /* =========================
@@ -145,7 +164,11 @@ body {
   align-items: flex-start;         /* dashboards default */
   padding: 2rem;
   box-sizing: border-box;
-  overflow: auto;
+
+  /*overflow*/
+  overflow: visible;
+  background: #ffffff;
+  min-height: 100vh;
 }
 
 /* Centered pages (login / OTP) */

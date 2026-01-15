@@ -1,9 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Register() {
   const navigate = useNavigate();
 
-  const submit = async (e) => {
+  async function submit(e) {
     e.preventDefault();
 
     const form = new FormData(e.target);
@@ -16,24 +16,39 @@ export default function Register() {
     });
 
     if (res.ok) {
-      navigate("/"); // back to login
+      navigate("/");
     } else {
       alert("Registration failed");
     }
-  };
+  }
 
   return (
-    <form onSubmit={submit}>
-      <h2>Create Account</h2>
+    <div className="page center login">
+      <div className="content">
+        <div className="card shadow p-4">
+          <h3 className="text-center mb-4">Create Account</h3>
 
-      <input name="username" placeholder="Username" required />
-      <input name="firstName" placeholder="First Name" />
-      <input name="lastName" placeholder="Last Name" />
-      <input name="email" placeholder="Email" required />
-      <input name="phone" placeholder="Phone" />
-      <input type="password" name="password" placeholder="Password" required />
+          <form onSubmit={submit}>
+            <input className="form-control mb-3" name="username" placeholder="Username" required />
+            <input className="form-control mb-3" name="firstName" placeholder="First Name" />
+            <input className="form-control mb-3" name="lastName" placeholder="Last Name" />
+            <input className="form-control mb-3" name="email" placeholder="Email" required />
+            <input className="form-control mb-3" name="phone" placeholder="Phone" />
+            <input className="form-control mb-3" type="password" name="password" placeholder="Password" required />
 
-      <button>Create Account</button>
-    </form>
+            <button className="btn btn-primary w-100">
+              Create Account
+            </button>
+          </form>
+
+          <div className="text-center mt-3">
+            <small>
+              Already have an account?{" "}
+              <Link to="/">Sign in</Link>
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

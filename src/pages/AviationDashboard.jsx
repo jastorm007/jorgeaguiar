@@ -204,6 +204,7 @@ export default function AviationDashboard() {
         </section>
 
         {/* CHARTS */}
+        <div className="table-wrapper">
         {chartMode !== "none" && (
           <section style={{ marginTop: 30 }}>
             <h3>Visualization by {chartColumn}</h3>
@@ -218,8 +219,10 @@ export default function AviationDashboard() {
             {chartMode === "pie" && <PieChart events={events} column={chartColumn} />}
           </section>
         )}
+        </div>
 
         {/* TABLE */}
+        <div className="table-wrapper">
         <section style={{ marginTop: 30 }}>
           <h3>Results</h3>
 
@@ -268,6 +271,7 @@ export default function AviationDashboard() {
             </tbody>
           </table>
         </section>
+        </div>
       </div>
     </div>
   );

@@ -5,11 +5,11 @@ html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
+  overflow-x: hidden;
 }
 
 body {
   min-width: 320px;
-  min-height: 100vh;
   font-family: system-ui, -apple-system, BlinkMacSystemFont,
                "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: #ffffff;
@@ -17,11 +17,17 @@ body {
 }
 
 /* =========================
+   CSS VARIABLES
+========================= */
+:root {
+  --nav-height: 72px; /* corrected to match padding */
+}
+
+/* =========================
    APP LAYOUT
 ========================= */
 .app {
-  min-height: 100vh;
-  width: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -30,51 +36,50 @@ body {
    NAVBAR
 ========================= */
 .nav {
-  position: relative;               /* REQUIRED for dropdown */
+  height: var(--nav-height);
+  display: flex;
+  align-items: center;
   background: #f5f5f5;
   border-bottom: 1px solid #ddd;
+  position: relative;
 }
 
 .nav-inner {
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 1rem 1.5rem;
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* Brand */
 .nav-brand a {
   font-weight: 700;
   font-size: 1.1rem;
   text-decoration: none;
   color: #222;
   padding-right: 1.25rem;
-  margin-right: 1.25rem;
   border-right: 1px solid #e0e0e0;
 }
 
-/* Hamburger button (hidden by default) */
 .nav-toggle {
   display: none;
   font-size: 1.8rem;
   background: none;
   border: none;
   cursor: pointer;
-  color: #ffffff;
 }
 
-/* Desktop nav links (DEFAULT STATE) */
+/* Desktop nav */
 .nav-links {
   display: flex;
-  align-items: center;
   gap: 1.5rem;
 }
 
 .nav-links a {
   text-decoration: none;
-  color: black;
+  color: #000;
   font-weight: 500;
 }
 
@@ -87,7 +92,7 @@ body {
 }
 
 /* =========================
-   MOBILE NAV ONLY
+   MOBILE NAV
 ========================= */
 @media (max-width: 768px) {
   .nav {
@@ -96,17 +101,17 @@ body {
   }
 
   .nav-brand a {
-    color: #ffffff;
+    color: #fff;
     border-right-color: #333;
-  }  
-  
+  }
+
   .nav-toggle {
     display: block;
-    color: #ffffff;
+    color: #fff;
   }
 
   .nav-links {
-    display: none;                 /* 🔥 hide links */
+    display: none;
     position: absolute;
     top: 100%;
     right: 1rem;
@@ -116,64 +121,59 @@ body {
     padding: 1rem;
     gap: 1rem;
     border: 1px solid #333;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     z-index: 1000;
   }
 
+  .nav-links.open {
+    display: flex;
+  }
+
   .nav-links a {
-    color: #ffffff;
-    font-weight: 500;
+    color: #fff;
   }
 
-  .nav-links a:hover {
-    text-decoration: underline;
-  }
-
-  /* Logout button inside mobile menu */
   .nav-links .logout {
     background: #222;
-    color: #ffffff;
+    color: #fff;
     border: 1px solid #444;
-  }
-
-  .nav-links .logout:hover {
-    background: #333;
-  }
-
-  .nav-links.open {
-    display: flex;                 /* 🔥 show dropdown */
-  }
-
-  .page {
-    padding: 1rem;
-  }
-
-  .content {
-    max-width: 100%;
   }
 }
 
 /* =========================
-   PAGE LAYOUT
+   PAGE LAYOUT (GLOBAL)
 ========================= */
 .page {
   flex: 1;
-  width: 100%;
   display: flex;
-  justify-content: center;         /* horizontal center */
-  align-items: flex-start;         /* dashboards default */
-  padding: 2rem;
-  box-sizing: border-box;
-
-  /*overflow*/
-  overflow: visible;
+  justify-content: center;
+  align-items: flex-start;
   background: #ffffff;
-  min-height: 100vh;
+  padding: 2rem;
 }
 
-/* Centered pages (login / OTP) */
+/* =========================
+   CENTERED AUTH PAGES
+========================= */
 .page.center {
+  min-height: calc(100vh - var(--nav-height));
   align-items: center;
+}
+
+.page.login {
+  justify-content: center;
+}
+
+/* Mobile auth adjustment */
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .page.center {
+    min-height: calc(100svh - var(--nav-height));
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
 }
 
 /* =========================
@@ -182,146 +182,29 @@ body {
 .content {
   width: 100%;
   max-width: 1280px;
-  margin: 0 auto;
 }
 
-/* Login card width */
 .login .content {
   max-width: 420px;
 }
 
 /* =========================
-   OPTIONAL UI HELPERS
+   CARD
 ========================= */
 .card {
-  background: #ffffff;
+  background: #fff;
   border-radius: 10px;
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
-h1, h2, h3 {
-  margin-top: 0;
-}
-
-a {
-  color: #2563eb;
-}
-
 /* =========================
-   SIMPLE FADE ANIMATION
+   VISITORS / ANALYTICS
 ========================= */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.fade-in {
-  animation: fadeIn 0.2s ease-out;
-}
-
-/* =========================
-   VIDEOS PAGE
-========================= */
-
-.video-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-}
-
-.video-card {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  animation: fadeIn 0.2s ease-out;
-}
-
-.video-card video {
-  width: 100%;
-  border-radius: 8px;
-  margin-bottom: 0.75rem;
-  background: #000;
-}
-
-.video-card h3 {
-  font-size: 1rem;
-  margin: 0.25rem 0;
-}
-
-.video-card p {
-  font-size: 0.9rem;
-  color: #555;
-  margin-bottom: 0.75rem;
-}
-
-.video-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.video-actions button {
-  border: 1px solid #ddd;
-  background: #f9f9f9;
-  border-radius: 6px;
-  padding: 0.4rem 0.8rem;
-  cursor: pointer;
-}
-
-.video-actions button:hover {
-  background: #eee;
-}
-
-/* =========================
-   VIDEO MODAL (POP-OUT)
-========================= */
-
-.video-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.video-modal-content {
-  background: #111;
-  padding: 20px;
-  max-width: 900px;
-  width: 90%;
-  border-radius: 8px;
-  color: white;
-}
-
-.close-btn {
-  float: right;
-  background: transparent;
-  color: white;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-/* =========================
-   VISITORS / ANALYTICS PAGE
-========================= */
-
-.visitors {
-  width: 100%;
-}
-
-/* KPI cards */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-  margin-bottom: 24px;
 }
 
 .kpi-card {
@@ -331,107 +214,28 @@ a {
   padding: 16px;
 }
 
-.kpi-label {
-  font-size: 12px;
-  opacity: 0.7;
-  margin-bottom: 6px;
-}
-
-.kpi-value {
-  font-size: 22px;
-  font-weight: 600;
-}
-
-/* Filters row */
-.visitor-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.visitor-filters input,
-.visitor-filters select {
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 0.9rem;
-}
-
-/* Table wrapper */
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
 }
 
-/* Analytics table */
 .analytics-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
 }
 
 .analytics-table th,
 .analytics-table td {
   padding: 10px;
-  border-bottom: 1px solid #e5e5e5;
-  text-align: left;
   white-space: nowrap;
-}
-
-.analytics-table th {
-  font-weight: 600;
-  cursor: pointer;
-  background: #fafafa;
-}
-
-.analytics-table tr:hover {
-  background: #f7f7f7;
-}
-
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.pagination button {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-}
-
-.pagination button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 /* =========================
-   ANALYTICS CHARTS
+   SVG SAFETY
 ========================= */
-
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-  margin-top: 32px;
+svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
-
-.chart-card {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-}
-
-.chart-title {
-  font-weight: 600;
-  margin-bottom: 12px;
-}
-
-
-

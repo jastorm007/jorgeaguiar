@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 const API_BASE = "https://sorpentor.com";
 const WEBSITE = "jorgeaguiar.com";
-const PAGE_SIZE = 10;
+const PAGE_LIMIT_OPTIONS = [6, 9, 10, 12, 24, 48];
 
 export default function Media() {
   const token = localStorage.getItem("aguiar_token");
@@ -12,11 +12,13 @@ export default function Media() {
   const [loadingId, setLoadingId] = useState(null);
 
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
+
   const [page, setPage] = useState(1);
-  const [sortOrder, setSortOrder] = useState("desc"); // desc | asc
+  const [pageSize, setPageSize] = useState(10);
 
   /* =====================================================
-     LOAD WEBSITE-SCOPED MEDIA (METADATA ONLY)
+     LOAD WEBSITE MEDIA (METADATA ONLY)
   ===================================================== */
   useEffect(() => {
     if (!token) return;
@@ -27,22 +29,16 @@ export default function Media() {
 
         const results = await Promise.all(
           types.map(type =>
-            fetch(
-              `${API_BASE}/media/website/${WEBSITE}/${type}`,
-              {
-                headers: { Authorization: `Bearer ${token}` }
-              }
-            ).then(r => r.json())
+            fetch(`${API_BASE}/media/website/${WEBSITE}/${type}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            }).then(r => r.json())
           )
         );
 
         setMedia(
           results
             .flat()
-            .sort(
-              (a, b) =>
-                new Date(b.created_at) - new Date(a.created_at)
-            )
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         );
       } catch (err) {
         console.error("Media load error:", err);
@@ -53,11 +49,11 @@ export default function Media() {
   }, [token]);
 
   /* =====================================================
-     RESET PAGE ON SEARCH OR SORT
+     RESET PAGE
   ===================================================== */
   useEffect(() => {
     setPage(1);
-  }, [search, sortOrder]);
+  }, [search, sortOrder, pageSize]);
 
   /* =====================================================
      FILTER + SORT + PAGINATE
@@ -67,7 +63,7 @@ export default function Media() {
     return (
       (item.title || "").toLowerCase().includes(q) ||
       (item.description || "").toLowerCase().includes(q) ||
-      item.type.toLowerCase().includes(q)
+      (item.type || "").toLowerCase().includes(q)
     );
   });
 
@@ -77,11 +73,11 @@ export default function Media() {
     return sortOrder === "asc" ? da - db : db - da;
   });
 
-  const totalPages = Math.ceil(sortedMedia.length / PAGE_SIZE);
+  const totalPages = Math.ceil(sortedMedia.length / pageSize) || 1;
 
   const paginatedMedia = sortedMedia.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
+    (page - 1) * pageSize,
+    page * pageSize
   );
 
   /* =====================================================
@@ -105,12 +101,9 @@ export default function Media() {
 
       const { url } = await res.json();
 
-      setActiveUrl(prev => ({
-        ...prev,
-        [item.id]: url
-      }));
+      setActiveUrl(prev => ({ ...prev, [item.id]: url }));
     } catch (err) {
-      console.error("Play media error:", err);
+      console.error(err);
       alert("Unable to play media");
     } finally {
       setLoadingId(null);
@@ -129,7 +122,7 @@ export default function Media() {
           Showing media for <strong>{WEBSITE}</strong>
         </p>
 
-        {/* 🔍 SEARCH + SORT */}
+        {/* CONTROLS */}
         <div
           style={{
             display: "flex",
@@ -145,7 +138,6 @@ export default function Media() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
-              width: "100%",
               maxWidth: "300px",
               padding: "8px 10px",
               borderRadius: "6px",
@@ -165,28 +157,65 @@ export default function Media() {
             <option value="desc">Newest first</option>
             <option value="asc">Oldest first</option>
           </select>
+
+          <select
+            value={pageSize}
+            onChange={e => setPageSize(Number(e.target.value))}
+            style={{
+              padding: "8px 10px",
+              borderRadius: "6px",
+              border: "1px solid #ccc"
+            }}
+          >
+            {PAGE_LIMIT_OPTIONS.map(n => (
+              <option key={n} value={n}>
+                {n} / page
+              </option>
+            ))}
+          </select>
         </div>
 
         {filteredMedia.length === 0 && <p>No media available.</p>}
 
-        {/* 📦 MEDIA GRID */}
-        <div style={{ maxWidth: "900px", display: "grid", gap: "20px" }}>
+        {/* ✅ GRID “LITTLE BOXES” */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: "20px"
+          }}
+        >
           {paginatedMedia.map(item => (
             <div
               key={`${item.type}-${item.id}`}
               style={{
-                padding: "16px",
                 background: "#f8f8f8",
-                borderRadius: "8px"
+                borderRadius: "10px",
+                padding: "16px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between"
               }}
             >
-              <h3>{item.title || "Untitled"}</h3>
+              <div>
+                <h3 style={{ marginBottom: "6px" }}>
+                  {item.title || "Untitled"}
+                </h3>
 
-              {item.description && <p>{item.description}</p>}
+                <small style={{ opacity: 0.65 }}>
+                  {(item.type || "").toUpperCase()}
+                </small>
 
-              {/* ▶ PLAY BUTTON */}
+                {item.description && (
+                  <p style={{ fontSize: "0.9rem", marginTop: "6px" }}>
+                    {item.description}
+                  </p>
+                )}
+              </div>
+
               {!activeUrl[item.id] && (
                 <button
+                  style={{ marginTop: "12px" }}
                   onClick={() => playMedia(item)}
                   disabled={loadingId === item.id}
                 >
@@ -200,13 +229,11 @@ export default function Media() {
                 </button>
               )}
 
-              {/* 🎥 VIDEO */}
               {activeUrl[item.id] && item.type === "video" && (
                 <video
                   src={activeUrl[item.id]}
                   controls
                   autoPlay
-                  loop
                   preload="none"
                   controlsList="nodownload noremoteplayback"
                   disablePictureInPicture
@@ -215,7 +242,6 @@ export default function Media() {
                 />
               )}
 
-              {/* 🎧 AUDIO */}
               {activeUrl[item.id] && item.type === "audio" && (
                 <audio
                   src={activeUrl[item.id]}
@@ -228,14 +254,13 @@ export default function Media() {
                 />
               )}
 
-              {/* 🖼 PHOTO */}
               {activeUrl[item.id] && item.type === "photo" && (
                 <img
                   src={activeUrl[item.id]}
                   alt={item.title || "Photo"}
                   style={{
                     width: "100%",
-                    maxHeight: "400px",
+                    maxHeight: "220px",
                     objectFit: "contain",
                     marginTop: "10px",
                     borderRadius: "6px"
@@ -247,7 +272,7 @@ export default function Media() {
           ))}
         </div>
 
-        {/* 📄 PAGINATION */}
+        {/* PAGINATION */}
         {totalPages > 1 && (
           <div
             style={{
@@ -264,7 +289,7 @@ export default function Media() {
               ◀ Prev
             </button>
 
-            <span style={{ lineHeight: "32px" }}>
+            <span>
               Page {page} of {totalPages}
             </span>
 

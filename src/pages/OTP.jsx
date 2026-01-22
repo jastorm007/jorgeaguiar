@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 export default function OTP() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -22,13 +23,25 @@ export default function OTP() {
       return;
     }
 
-    const res = await verifyOTP(email, otp);
+    if (otp.length < 4) {
+      setError("Invalid OTP format.");
+      return;
+    }
 
-    if (res?.token) {
-      loginWithToken(res.token);
-      navigate("/home");
-    } else {
-      setError(res?.message || "Invalid OTP");
+    try {
+      setLoading(true);
+      const res = await verifyOTP(email, otp);
+
+      if (res?.token) {
+        loginWithToken(res.token);
+        navigate("/home", { replace: true });
+      } else {
+        setError(res?.message || "Invalid OTP");
+      }
+    } catch (err) {
+      setError("Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -45,12 +58,19 @@ export default function OTP() {
               className="form-control mb-3"
               placeholder="One-time password"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) =>
+                setOtp(e.target.value.replace(/\D/g, ""))
+              }
+              inputMode="numeric"
+              maxLength={6}
               required
             />
 
-            <button className="btn btn-success w-100">
-              Verify
+            <button
+              className="btn btn-success w-100"
+              disabled={loading}
+            >
+              {loading ? "Verifying…" : "Verify"}
             </button>
           </form>
         </div>

@@ -1,38 +1,85 @@
-const API_LOGIN = "https://sorpentor.com/login/otp";
-const API_VERIFY = "https://sorpentor.com/login/verify-otp";
-const API_REGISTER = "https://sorpentor.com/register";
+const API_BASE = "https://sorpentor.com";
 
-/**
- * Step 1: Request OTP
- */
+/* ============================
+   AUTH ENDPOINTS
+============================ */
+const API_LOGIN = `${API_BASE}/login/otp`;
+const API_VERIFY = `${API_BASE}/login/verify-otp`;
+const API_REGISTER = `${API_BASE}/register`;
+const API_REFRESH = `${API_BASE}/auth/refresh`;
+const API_LOGOUT = `${API_BASE}/auth/logout`;
+
+/* ============================
+   STEP 1: REQUEST OTP
+============================ */
 export async function requestOTP(email, password) {
   const res = await fetch(API_LOGIN, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    credentials: "include", // ✅ safe to include
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ email, password }),
   });
 
   return res.json();
 }
 
-/**
- * Step 2: Verify OTP
- */
+/* ============================
+   STEP 2: VERIFY OTP
+   (SETS REFRESH COOKIE)
+============================ */
 export async function verifyOTP(email, otp) {
   const res = await fetch(API_VERIFY, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    credentials: "include", // 🔥 REQUIRED
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ email, otp }),
   });
 
   return res.json();
 }
 
-//Register user
+/* ============================
+   REFRESH ACCESS TOKEN
+============================ */
+export async function refreshAccessToken() {
+  const res = await fetch(API_REFRESH, {
+    method: "POST",
+    credentials: "include", // 🔥 REQUIRED
+  });
+
+  if (!res.ok) {
+    throw new Error("Refresh failed");
+  }
+
+  return res.json();
+}
+
+/* ============================
+   LOGOUT
+============================ */
+export async function logout() {
+  const res = await fetch(API_LOGOUT, {
+    method: "POST",
+    credentials: "include", // 🔥 REQUIRED
+  });
+
+  return res.json();
+}
+
+/* ============================
+   REGISTER USER
+============================ */
 export async function registerUser(data) {
   const res = await fetch(API_REGISTER, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(data),
   });
 

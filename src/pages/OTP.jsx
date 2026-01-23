@@ -20,7 +20,7 @@ export default function OTP() {
   ===================================================== */
   useEffect(() => {
     if (token) {
-      navigate("/dashboard", { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [token, navigate]);
 
@@ -47,7 +47,7 @@ export default function OTP() {
 
       if (res?.token) {
         loginWithToken(res.token);
-        navigate("/dashboard", { replace: true });
+        navigate("/home", { replace: true });
       } else {
         setError(res?.message || "Invalid OTP");
       }

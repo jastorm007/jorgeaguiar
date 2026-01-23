@@ -29,15 +29,6 @@ export default function App() {
           <Route path="/otp" element={<OTP />} />
 
           <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/visitors"
             element={
               <ProtectedRoute>

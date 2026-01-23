@@ -7,7 +7,6 @@ import OTP from "./pages/OTP";
 import Home from "./pages/Home";
 import Account from "./pages/Account";
 import Media from "./pages/Media";
-import Dashboard from "./pages/Dashboard";
 import AviationDashboard from "./pages/AviationDashboard";
 import AviationEventReport from "./pages/AviationEventReport";
 import Register from "./pages/Register";

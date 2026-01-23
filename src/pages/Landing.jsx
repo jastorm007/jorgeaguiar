@@ -18,7 +18,7 @@ export default function Landing() {
   ===================================================== */
   useEffect(() => {
     if (token) {
-      navigate("/dashboard", { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [token, navigate]);
 

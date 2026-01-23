@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { apiGetJson } from "../api/apiFetch";
 
 const API_BASE = "https://sorpentor.com";
 const WEBSITE = "jorgeaguiar.com";
@@ -23,7 +25,7 @@ const SORTABLE_COLUMNS = [
 ];
 
 export default function Visitors() {
-  const token = localStorage.getItem("aguiar_token");
+  const auth = useAuth();
 
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
@@ -45,38 +47,55 @@ export default function Visitors() {
   const [chartMode, setChartMode] = useState("bar"); // bar | line | pie
   const [chartColumn, setChartColumn] = useState("page");
 
+  /* =====================================================
+     LOAD VISITS (AUTO REFRESH SAFE)
+  ===================================================== */
   useEffect(() => {
+    if (!auth.token) return;
+
+    async function loadVisits() {
+      try {
+        const data = await apiGetJson(
+          `${API_BASE}/analytics/visits/table`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              website: WEBSITE,
+              page,
+              pageSize,
+              sortBy,
+              sortDir,
+              search,
+              startDate,
+              endDate
+            })
+          },
+          auth
+        );
+
+        setRows(data.rows || []);
+        setTotal(data.total || 0);
+      } catch (err) {
+        console.error("Visitor load error:", err);
+      }
+    }
+
     loadVisits();
-  }, [page, pageSize, sortBy, sortDir, search, startDate, endDate]);
-
-  async function loadVisits() {
-    if (!token) return;
-
-    const res = await fetch(`${API_BASE}/analytics/visits/table`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        website: WEBSITE,
-        page,
-        pageSize,
-        sortBy,
-        sortDir,
-        search,
-        startDate,
-        endDate
-      })
-    });
-
-    const data = await res.json();
-    setRows(data.rows || []);
-    setTotal(data.total || 0);
-  }
+  }, [
+    auth.token,
+    page,
+    pageSize,
+    sortBy,
+    sortDir,
+    search,
+    startDate,
+    endDate
+  ]);
 
   function toggleSort(col) {
     if (!SORTABLE_COLUMNS.includes(col)) return;
+
     if (sortBy === col) {
       setSortDir(d => (d === "asc" ? "desc" : "asc"));
     } else {

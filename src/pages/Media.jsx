@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { apiFetch, apiGetJson } from "../api/apiFetch";
 
 const API_BASE = "https://sorpentor.com";
 const WEBSITE = "jorgeaguiar.com";
 const PAGE_LIMIT_OPTIONS = [6, 9, 10, 12, 24, 48];
 
 export default function Media() {
-  const token = localStorage.getItem("aguiar_token");
+  const auth = useAuth();
 
   const [media, setMedia] = useState([]);
   const [activeUrl, setActiveUrl] = useState({});
@@ -21,7 +23,7 @@ export default function Media() {
      LOAD WEBSITE MEDIA (METADATA ONLY)
   ===================================================== */
   useEffect(() => {
-    if (!token) return;
+    if (!auth.token) return;
 
     async function loadMedia() {
       try {
@@ -29,9 +31,11 @@ export default function Media() {
 
         const results = await Promise.all(
           types.map(type =>
-            fetch(`${API_BASE}/media/website/${WEBSITE}/${type}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            }).then(r => r.json())
+            apiGetJson(
+              `${API_BASE}/media/website/${WEBSITE}/${type}`,
+              {},
+              auth
+            )
           )
         );
 
@@ -46,10 +50,10 @@ export default function Media() {
     }
 
     loadMedia();
-  }, [token]);
+  }, [auth.token]);
 
   /* =====================================================
-     RESET PAGE
+     RESET PAGE WHEN FILTERS CHANGE
   ===================================================== */
   useEffect(() => {
     setPage(1);
@@ -73,7 +77,7 @@ export default function Media() {
     return sortOrder === "asc" ? da - db : db - da;
   });
 
-  const totalPages = Math.ceil(sortedMedia.length / pageSize) || 1;
+  const totalPages = Math.max(1, Math.ceil(sortedMedia.length / pageSize));
 
   const paginatedMedia = sortedMedia.slice(
     (page - 1) * pageSize,
@@ -81,29 +85,25 @@ export default function Media() {
   );
 
   /* =====================================================
-     SIGN URL ON DEMAND
+     SIGN MEDIA URL (AUTO REFRESH SAFE)
   ===================================================== */
   async function playMedia(item) {
-    if (!token) return;
-
     setLoadingId(item.id);
 
     try {
-      const res = await fetch(
-        `${API_BASE}/website/jorgeaguiar/media/${item.type}/sign/${item.id}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` }
-        }
+      const res = await apiFetch(
+        `${API_BASE}/media/website/${WEBSITE}/${item.type}/sign/${item.id}`,
+        { method: "POST" },
+        auth
       );
 
-      if (!res.ok) throw new Error("Failed to sign URL");
+      if (!res.ok) throw new Error("Failed to sign media URL");
 
       const { url } = await res.json();
 
       setActiveUrl(prev => ({ ...prev, [item.id]: url }));
     } catch (err) {
-      console.error(err);
+      console.error("Play error:", err);
       alert("Unable to play media");
     } finally {
       setLoadingId(null);
@@ -177,7 +177,7 @@ export default function Media() {
 
         {filteredMedia.length === 0 && <p>No media available.</p>}
 
-        {/* ✅ GRID “LITTLE BOXES” */}
+        {/* MEDIA GRID */}
         <div
           style={{
             display: "grid",

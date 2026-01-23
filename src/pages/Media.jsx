@@ -114,7 +114,7 @@ export default function Media() {
      RENDER
   ===================================================== */
   return (
-    <div className="page center">
+    <div className="page">
       <div className="content">
         <h2>Media</h2>
 

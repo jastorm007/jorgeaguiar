@@ -48,14 +48,15 @@ export async function verifyOTP(email, otp) {
 export async function refreshAccessToken() {
   const res = await fetch(API_REFRESH, {
     method: "POST",
-    credentials: "include", // 🔥 REQUIRED
+    credentials: "include",
   });
 
   if (!res.ok) {
-    throw new Error("Refresh failed");
+    return null;
   }
 
-  return res.json();
+  const data = await res.json();
+  return data.token; // ✅ return token string only
 }
 
 /* ============================

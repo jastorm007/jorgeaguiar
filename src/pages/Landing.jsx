@@ -1,24 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { requestOTP } from "../api/auth";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Landing() {
+  const { token } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
+  /* =====================================================
+     REDIRECT IF ALREADY AUTHENTICATED
+  ===================================================== */
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [token, navigate]);
+
+  /* =====================================================
+     REQUEST OTP
+  ===================================================== */
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
 
-    const res = await requestOTP(email, password);
+    if (!email || !password) {
+      setError("Email and password are required.");
+      return;
+    }
 
-    if (res?.success) {
-      navigate("/otp", { state: { email } });
-    } else {
-      setError(res?.message || "Failed to request OTP");
+    try {
+      setLoading(true);
+      const res = await requestOTP(email, password);
+
+      if (res?.success) {
+        navigate("/otp", { state: { email } });
+      } else {
+        setError(res?.message || "Failed to request OTP");
+      }
+    } catch (err) {
+      setError("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -53,12 +81,14 @@ export default function Landing() {
               />
             </div>
 
-            <button className="btn btn-primary w-100">
-              Continue
+            <button
+              className="btn btn-primary w-100"
+              disabled={loading}
+            >
+              {loading ? "Sending OTP…" : "Continue"}
             </button>
           </form>
 
-          {/* ✅ Register link */}
           <div className="text-center mt-3">
             <small>
               Don’t have an account?{" "}

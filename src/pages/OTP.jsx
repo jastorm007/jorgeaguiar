@@ -1,19 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { verifyOTP } from "../api/auth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function OTP() {
+  const { token, loginWithToken } = useAuth();
+
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
 
   const { email } = location.state || {};
 
+  /* =====================================================
+     REDIRECT IF ALREADY AUTHENTICATED
+  ===================================================== */
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [token, navigate]);
+
+  /* =====================================================
+     VERIFY OTP
+  ===================================================== */
   async function handleVerify(e) {
     e.preventDefault();
     setError("");
@@ -34,7 +47,7 @@ export default function OTP() {
 
       if (res?.token) {
         loginWithToken(res.token);
-        navigate("/home", { replace: true });
+        navigate("/dashboard", { replace: true });
       } else {
         setError(res?.message || "Invalid OTP");
       }

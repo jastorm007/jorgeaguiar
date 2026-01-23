@@ -48,10 +48,10 @@ export default function App() {
           />
 
           <Route
-            path="/dashboard"
+            path="/home"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Home />
               </ProtectedRoute>
             }
           />

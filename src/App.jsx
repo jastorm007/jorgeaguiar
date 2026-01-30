@@ -12,6 +12,7 @@ import AviationEventReport from "./pages/AviationEventReport";
 import Register from "./pages/Register";
 import Broadcast from "./pages/Broadcast";
 import Visitors from "./pages/Visitors";
+import AI from "./pages/AI";
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -33,6 +34,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Visitors />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/ai"
+            element={
+              <ProtectedRoute>
+                <AI />
               </ProtectedRoute>
             }
           />

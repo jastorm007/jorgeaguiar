@@ -45,6 +45,7 @@ export default function Navbar() {
           {token && (
             <>
               <Link to="/visitors" onClick={() => setOpen(false)}>Visitors</Link>
+              <Link to="/ai" onClick={() => setOpen(false)}>AI</Link>
               <Link to="/media" onClick={() => setOpen(false)}>Media</Link>            
               <Link to="/broadcast" onClick={() => setOpen(false)}>Broadcast</Link>
               <Link to="/aviation" onClick={() => setOpen(false)}>Aviation Dashboard</Link>

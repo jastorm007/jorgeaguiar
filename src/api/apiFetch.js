@@ -1,55 +1,62 @@
 // src/api/apiFetch.js
 
-let refreshPromise = null;
+const API_BASE = "https://sorpentor.com";
 
 /**
- * Low-level fetch wrapper with:
- * - Authorization header
- * - Cookie support (refresh token)
- * - Automatic refresh + retry on 401
- * - Refresh lock to prevent stampede
+ * Low-level fetch wrapper
+ * - Injects access token
+ * - Sends refresh cookie
+ * - Auto-refreshes on 401
+ * - Retries original request once
  */
 export async function apiFetch(url, options = {}, auth) {
+  if (!auth) {
+    throw new Error("Auth context required for apiFetch");
+  }
+
+  // Helper to perform fetch with token
   const doFetch = (token) =>
     fetch(url, {
       ...options,
-      credentials: "include", // 🔥 REQUIRED for refresh cookie
       headers: {
         ...(options.headers || {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {})
-      }
+      },
+      credentials: "include" // 🔑 REQUIRED for refresh cookie
     });
 
-  // 1️⃣ Attempt request with current access token
-  let res = await doFetch(auth?.token);
+  // 1️⃣ First attempt with current access token
+  let res = await doFetch(auth.token);
 
-  // 2️⃣ If not unauthorized or no refresh available, return immediately
-  if (res.status !== 401 || !auth?.refreshAccessToken) {
-    return res;
+  // 2️⃣ Access token expired → try refresh
+  if (res.status === 401 && auth.token) {
+    const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      credentials: "include"
+    });
+
+    // Refresh failed → session expired
+    if (!refreshRes.ok) {
+      auth.logout();
+      throw new Error("Session expired");
+    }
+
+    const { token: newToken } = await refreshRes.json();
+
+    // Update auth context
+    auth.setToken(newToken);
+
+    // 3️⃣ Retry original request with new token
+    res = await doFetch(newToken);
   }
 
-  // 3️⃣ If a refresh is already in progress, wait for it
-  if (!refreshPromise) {
-    refreshPromise = auth
-      .refreshAccessToken()
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  const newToken = await refreshPromise;
-
-  // 4️⃣ If refresh failed, propagate original 401
-  if (!newToken) {
-    return res;
-  }
-
-  // 5️⃣ Retry original request with new token
-  return doFetch(newToken);
+  return res;
 }
 
 /**
- * Convenience helper for JSON APIs
+ * High-level helper
+ * - Parses JSON or text
+ * - Normalizes API errors
  */
 export async function apiGetJson(url, options = {}, auth) {
   const res = await apiFetch(url, options, auth);

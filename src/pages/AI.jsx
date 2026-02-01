@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { apiGetJson } from "../api/apiFetch";
 
-const API_BASE = "https://sorpentor.com"; // adjust if needed
+const API_BASE = "https://sorpentor.com";
 
 export default function AI() {
-  const { token } = useAuth();
+  const auth = useAuth();
 
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("tinyllama");
@@ -20,33 +21,35 @@ export default function AI() {
       return;
     }
 
+    if (!auth.token) {
+      setError("You must be logged in to use AI");
+      return;
+    }
+
     setLoading(true);
     setError("");
     setAnswer("");
 
     try {
-      const res = await fetch(`${API_BASE}/ai/ask`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+      const data = await apiGetJson(
+        `${API_BASE}/ai/ask`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model, prompt })
         },
-        body: JSON.stringify({
-          model,
-          prompt
-        })
-      });
+        auth
+      );
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "AI request failed");
-      }
-
-      setAnswer(data.answer || "No response returned");
+      setAnswer(data?.answer || "No response returned");
     } catch (err) {
-      console.error(err);
-      setError(err.message);
+      console.error("AI ERROR:", err);
+
+      if (err.message === "Session expired") {
+        setError("Session expired. Please log in again.");
+      } else {
+        setError(err.message || "AI request failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -63,6 +66,9 @@ export default function AI() {
           onChange={e => setModel(e.target.value)}
           style={styles.select}
         >
+          <option value="llama3">llama3</option>
+          <option value="mistral">mistral</option>
+          <option value="codellama">codellama</option>
           <option value="tinyllama">tinyllama</option>
         </select>
 
